@@ -1,15 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+import { setStore, store } from 'redux/global';
+import { reducers } from 'redux/reducers';
 import App from './containers/App';
-import { reducers } from './redux/reducers';
-import { getStore, setStore } from './redux/store';
 import * as serviceWorker from './serviceWorker';
 
 setStore(reducers);
-
-// Do not export this store, use getStore
-const store = getStore();
 
 ReactDOM.render(
   <React.StrictMode>

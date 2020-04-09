@@ -8,6 +8,7 @@
   "plugins": ["@typescript-eslint", "react", "react-hooks", "jest", "prettier"],
   "rules": {
     "@typescript-eslint/explicit-function-return-type": "off", // annoying to force return type
+    "@typescript-eslint/interface-name-prefix": ["error", "always"], // interface prefix with "I"
     "import/extensions": "off", // Allow to use ..
     "import/prefer-default-export": "off", // Allow single Named-export
     "react/jsx-filename-extension": [
