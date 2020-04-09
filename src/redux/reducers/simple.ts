@@ -1,5 +1,5 @@
-import { AnyAction, combineReducers } from 'redux';
-import { SimpleActions } from '../../constants/redux/actions/simple';
+import { SimpleActions } from 'constants/redux/actions/simple';
+import { AnyAction } from 'redux';
 
 const initialState = 'Unknown';
 
@@ -12,4 +12,4 @@ const addSimpleReducer = (state = initialState, action: AnyAction) => {
   }
 };
 
-export const simpleReducers = combineReducers({ addSimpleReducer });
+export const simpleReducers = addSimpleReducer;

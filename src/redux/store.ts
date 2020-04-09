@@ -5,6 +5,7 @@ import {
   Store,
   Middleware,
 } from 'redux';
+import thunk from 'redux-thunk';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { composeWithDevTools } from 'redux-devtools-extension';
 
@@ -12,10 +13,7 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 let store: Store;
 
 export const setStore = <R extends Reducer>(reducers: R) => {
-  const middleware = [
-    // apiMiddleware({ getError, defaultHandleError: handleError }),
-    // thunk.withExtraArgument({ selectors, apis }),
-  ] as Middleware[];
+  const middleware = [thunk] as Middleware[];
   store = createStore(
     reducers,
     {},
