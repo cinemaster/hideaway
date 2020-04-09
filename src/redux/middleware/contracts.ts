@@ -87,6 +87,16 @@ export interface IHideawayReducerOptions<S> {
   isStateManager?: boolean;
 }
 
+// ########## Selectors ##########
+/**
+ * @param {string[]} path location of the requested state.
+ * @param {any} defaultValue value to return if doesn't find the path (default: undefined).
+ */
+export interface IHideawaySelectorOptions<S> {
+  path?: string[];
+  defaultValue?: THideawayAny;
+}
+
 // ########## Thunk ##########
 export interface IHideawayThunkDispatch<S, DispatchExt = {}> {
   <R>(thunk: IHideawayThunk<R, S, DispatchExt>): R;

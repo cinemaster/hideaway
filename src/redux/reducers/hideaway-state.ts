@@ -15,10 +15,10 @@ const addSimpleHideawayStateReducer: TReducer<TSimpleHideaway> = (
 ) => action.text || state;
 
 reducerManage.add(
-  HideawayActions.ADD_HIDEAWAY_STATE_STRING,
+  HideawayActions.ADD_HIDEAWAY_THUNK_STATE,
   (state, action) => action.payload || state,
 );
 
 export const hideawayStateManagementReducers = reducerManage.combine({
-  [HideawayActions.ADD_SIMPLE_HIDEAWAY_STATE]: addSimpleHideawayStateReducer,
+  [HideawayActions.ADD_HIDEAWAY_SIMPLE_STATE]: addSimpleHideawayStateReducer,
 });

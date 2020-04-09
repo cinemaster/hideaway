@@ -1,5 +1,5 @@
-import { API } from '../contracts';
 import { generateApiAction } from '../action';
+import { API } from '../contracts';
 import { mockAPI } from './__ignore_tests__/common';
 
 describe('middleware -> action -> generateApiAction', () => {
