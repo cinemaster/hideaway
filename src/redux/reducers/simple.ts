@@ -1,10 +1,10 @@
 import { SimpleActions } from 'constants/simple';
 import { AnyAction } from 'redux';
-import { TReducer } from 'redux/middleware/contracts';
+import { TFHideawayReducer } from 'redux/middleware/contracts';
 
 const initialState = 'Unknown';
 
-const addSimpleReducer: TReducer<string> = (
+const addSimpleReducer: TFHideawayReducer<string> = (
   state = initialState,
   action: AnyAction,
 ) => {

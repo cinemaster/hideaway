@@ -22,7 +22,7 @@
     "react/prop-types": "off", // Is this incompatible with TS props type?
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "no-console": ["error", { "allow": ["warn", "error"] }] // only allow console.(warn, error)
+    "no-console": ["error", { "allow": ["warn", "error", "trace"] }] // only allow console.(warn, error)
   },
   "extends": [
     "airbnb",

@@ -1,69 +1,88 @@
 import { AnyAction, Dispatch, Middleware } from 'redux';
 import {
-  API,
-  IHideawayApiTemplateAction,
-  IHideawayThunk,
+  HIDEAWAY,
   IHideawayAction,
-  THideawayMiddlewareAPI,
+  IHideawayActionContent,
+  IHideawayOptions,
+  IThunk,
+  IThunkDispatch,
+  THideawayAction,
   THideawayDispatch,
+  THideawayReason,
 } from './contracts';
 
-export function hideaway<S, DispatchExt>() {
+export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
   const middleaware: Middleware<
-    DispatchExt,
+    IThunkDispatch<S, DispatchExt>,
     S,
     THideawayDispatch<S, DispatchExt>
-  > = (apiMiddleware: THideawayMiddlewareAPI<S, DispatchExt>) => (
-    next: Dispatch,
-  ) => (action: IHideawayAction<S>) => {
-    if (API in action) {
+  > = (apiMiddleware) => (next: Dispatch) => <R>(
+    action: THideawayAction<R>,
+  ) => {
+    if (HIDEAWAY in action) {
+      const { withExtraArgument } = options;
       const actionAPI = action as IHideawayAction<S>;
-      const { type, api, predicate = () => true } = actionAPI[
-        API
-      ] as IHideawayApiTemplateAction<S>;
-      const middleawareProcess: IHideawayThunk<
-        typeof Promise.prototype,
-        S,
-        DispatchExt
-      > = (dispatch, getState) => {
-        // It doesn't make anything in hideaway, but will send to thunk
+      const {
+        type,
+        api = () => Promise.reject(new Error('API not set')),
+        predicate = () => true,
+        nested,
+        complement,
+        onError: onErrorAction,
+      } = actionAPI[HIDEAWAY] as IHideawayActionContent<S>;
+      const middleawareProcess: IThunk<Promise<void>, S> = (
+        dispatch,
+        getState,
+      ) => {
         if (!predicate(getState)) return Promise.resolve();
 
-        // Inform the starting process
-        dispatch({ type: `${type}_REQUEST` });
+        const request: IHideawayActionContent<S> = {
+          type: `${type}_REQUEST`,
+          ...(nested && { nested }),
+          ...(complement && { complement }),
+        };
 
-        // It doesn't need to send anything to API because they need to have all
-        // the necessary values.
-        return api()
+        // Inform the starting process
+        dispatch(request);
+
+        return api(dispatch, getState, withExtraArgument)
           .then((response: Response) => {
             if (response.ok) {
               return response.json();
             }
-            // Any status code (Throw a response to be validate in one method on catch)
+            // Any status code
             throw response;
           })
-          .then((body: string) => {
-            const response = {
+          .then((body: S) => {
+            const response: IHideawayActionContent<S> = {
               type: `${type}_RESPONSE`,
               payload: body,
+              ...(nested && { nested }),
+              ...(complement && { complement }),
             };
             dispatch(response);
           })
-          .catch((reason: string | Response) => {
-            // String: URL wrong, CORS block, network error
-            // Responsponse: status code error
-            const response = {
+          .catch((reason: THideawayReason) => {
+            const { onError: onErrorMiddleware } = options;
+            // onErrorAction has precedence
+            const onError = onErrorAction || onErrorMiddleware;
+            const response: IHideawayActionContent<THideawayReason> = {
               type: `${type}_ERROR`,
               payload: reason,
+              ...(nested && { nested }),
+              ...(complement && { complement }),
             };
             dispatch(response);
+            if (onError) {
+              onError(response);
+            }
           });
       };
       return apiMiddleware.dispatch(middleawareProcess);
     }
 
-    // next requires an action, but accept thunks under the hood
+    // next requires an action
     return next((action as unknown) as AnyAction);
   };
   return middleaware;
-}
+};

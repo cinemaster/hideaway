@@ -1,30 +1,31 @@
 import {
-  API,
+  HIDEAWAY,
   IHideawayAction,
-  IHideawayApiTemplateAction,
-  IHideawayGenerateApiOptions,
-  THideawayApiFunction,
+  IHideawayActionContent,
+  IHideawayActionOptions,
+  TFHideawayApi,
+  THideawayAny,
 } from './contracts';
 
 /**
  * @param {string} type is the Action type to reducer use.
- * @param {THideawayApiFunction<S>} api is a function that it receives the state and returns a promise. The function receive (dispatch, getState, extra) from middleware
- * @param {IHideawayGenerateApiActionProps} options are additional settings
+ * @param {TFHideawayApi<S>} api is a function that returns a promise. The
+ * function receive (dispatch, getState, extra) from the middleware.
+ * @param {IHideawayActionOptions} options are additional settings.
  */
-export const generateApiAction = <S>(
+export const generateAction = <S = THideawayAny>(
   type: string,
-  api: THideawayApiFunction,
-  options: IHideawayGenerateApiOptions<S> = {},
+  api: TFHideawayApi,
+  options: IHideawayActionOptions = {},
 ) => {
-  const { keys, actionAttributes, predicate } = options;
-  const response: IHideawayApiTemplateAction<S> = {
+  const { keys, path, complement, predicate, onError } = options;
+  const response: IHideawayActionContent<S> = {
     type,
     api,
-    predicate,
-    ...actionAttributes,
+    ...(predicate && { predicate }),
+    ...(onError && { onError }),
+    ...(complement && { complement }),
+    ...(keys && { nested: { keys, path: path || [] } }),
   };
-  if (keys) {
-    response.keys = keys;
-  }
-  return { [API]: response } as IHideawayAction<S>;
+  return { [HIDEAWAY]: response } as IHideawayAction<S>;
 };

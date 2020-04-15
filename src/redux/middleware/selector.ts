@@ -1,29 +1,21 @@
-import { pathOr } from 'ramda';
-import { IHideawaySelectorOptions, IHideawayReducerState } from './contracts';
+import { or, pathOr } from 'ramda';
+import { IHideawaySelectorOptions, THideawayAny } from './contracts';
 
 /**
- * generate the selector to retreive the state
+ * Generate the selector to retreive the state
  * @param {S} state
- * @param {IHideawaySelectorOptions<S>} options  are additional settings
+ * @param {@inheritdoc IHideawaySelectorOptions} options are additional settings
  */
-export const generateSelector = <S>(
+export const generateSelector = <S, R = THideawayAny>(
   state: S,
-  options: IHideawaySelectorOptions<S> = {},
+  options: IHideawaySelectorOptions = {},
 ) => {
-  const { path = [], defaultValue } = options;
-  return pathOr(defaultValue, path, state);
-};
-
-export const generateValueSelector = <S>(
-  state: S,
-  options: IHideawaySelectorOptions<S> = {},
-) => {
-  return generateSelector(state, options) as S;
-};
-
-export const generateStateSelector = <S>(
-  state: S,
-  options: IHideawaySelectorOptions<S> = {},
-) => {
-  return generateSelector(state, options) as IHideawayReducerState<S>;
+  const { path = [], defaultValue, nested } = options;
+  const result = pathOr(defaultValue, path, state);
+  if (nested) {
+    const { keys, path: nestedPath } = nested;
+    const mappedList = nestedPath.map((key) => or(keys[key], key));
+    return pathOr(defaultValue, mappedList, result);
+  }
+  return result as R;
 };

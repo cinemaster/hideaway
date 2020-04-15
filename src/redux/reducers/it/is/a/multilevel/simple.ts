@@ -1,9 +1,8 @@
 import { THideawayState } from '../../../../../../contracts/redux';
-import { HideawayReducerManagement } from '../../../../../middleware/reducer';
+import { ReducerManagement } from '../../../../../middleware/reducer';
 import { HideawayActions } from '../../../../../../constants/hideaway';
 
-// Hideaway Management
-const reducerManage = new HideawayReducerManagement<THideawayState>({
+const reducerManage = new ReducerManagement<THideawayState>({
   initialState: 'Unknown',
   isStateManager: false,
 });

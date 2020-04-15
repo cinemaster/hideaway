@@ -2,38 +2,44 @@ import { IRootState, THideawayState } from 'contracts/redux';
 import React, { FunctionComponent } from 'react';
 import { connect } from 'react-redux';
 import {
-  addHideawayThunkAction,
   addHideawaySimpleAction,
+  addHideawayThunkAction,
 } from 'redux/actions/hideaway';
 import {
-  addHideawayThunkStateAction,
-  addHideawaySimpleStateAction,
-  addHideawayThunkStateErrorAction,
-} from 'redux/actions/hideaway-state';
-import {
   addHideawaySimpleMultilevelAction,
-  addHideawayThunkMultilevelAction,
   addHideawaySimpleMultilevelStateAction,
+  addHideawayThunkMultilevelAction,
   addHideawayThunkMultilevelStateAction,
   addHideawayThunkMultilevelStateErrorAction,
 } from 'redux/actions/hideaway-multilevel';
 import {
-  getHideawaySelector,
-  getHideawayStateSelector,
-  getHideawayMultilevelSelector,
-  getHideawayStateMultilevelSelector,
-} from 'redux/selectors/hideaway';
+  addHideawayNestedStateAction,
+  addHideawayNestedStateErrorAction,
+} from 'redux/actions/hideaway-nested';
+import {
+  addHideawaySimpleStateAction,
+  addHideawayThunkStateAction,
+  addHideawayThunkStateErrorAction,
+} from 'redux/actions/hideaway-state';
 import { addSimpleAction } from 'redux/actions/simple';
 import { addThunkApiAction } from 'redux/actions/thunk';
+import {
+  getHideawayMultilevelSelector,
+  getHideawayNestedMultilevelSelector,
+  getHideawaySelector,
+  getHideawayStateMultilevelSelector,
+  getHideawayStateSelector,
+} from 'redux/selectors/hideaway';
 import './App.css';
 
 interface IStateToProps {
   simple: string;
   thunk: object;
   hideawaySimple: THideawayState;
-  hideawayState: object;
+  hideawayState: THideawayState;
   itIsAMultilevelSimple: THideawayState;
   itIsAMultilevelState: THideawayState;
+  itIsAMultilevelNested: THideawayState;
 }
 
 interface IDispatchToProps {
@@ -49,6 +55,8 @@ interface IDispatchToProps {
   addHideawaySimpleMultilevelState: Function;
   addHideawayThunkMultilevelState: Function;
   addHideawayThunkMultilevelStateError: Function;
+  addHideawayNestedState: Function;
+  addHideawayNestedStateError: Function;
 }
 
 type IProps = IStateToProps & IDispatchToProps;
@@ -60,6 +68,7 @@ const App: FunctionComponent<IProps> = ({
   hideawayState,
   itIsAMultilevelSimple,
   itIsAMultilevelState,
+  itIsAMultilevelNested,
   addSimple,
   addThunk,
   addHideawaySimple,
@@ -72,6 +81,8 @@ const App: FunctionComponent<IProps> = ({
   addHideawaySimpleMultilevelState,
   addHideawayThunkMultilevelState,
   addHideawayThunkMultilevelStateError,
+  addHideawayNestedState,
+  addHideawayNestedStateError,
 }) => {
   const stateResult = {
     simple,
@@ -80,7 +91,9 @@ const App: FunctionComponent<IProps> = ({
     hideawayState,
     itIsAMultilevelSimple,
     itIsAMultilevelState,
+    itIsAMultilevelNested,
   };
+
   return (
     <div className="grid-container">
       <div className="left">
@@ -268,6 +281,100 @@ const App: FunctionComponent<IProps> = ({
               </button>
             </div>
           </div>
+          <span>Hideaway nested</span>
+          <div>
+            <div>
+              <button
+                type="button"
+                onClick={() =>
+                  addHideawayNestedState('Update A => B => C (ON)', {
+                    keys: {
+                      a: 'mock A',
+                      b: 'mock B',
+                      c: 'mock C',
+                    },
+                    path: ['a', 'b', 'c'],
+                  })
+                }
+              >
+                A -&gt; B -&gt; C (ON)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  addHideawayNestedState('Update A => B => C (OFF)', {
+                    keys: {
+                      a: 'mock A',
+                      b: 'mock B',
+                      c: 'mock C',
+                    },
+                    path: ['a', 'b', 'c'],
+                  })
+                }
+              >
+                A -&gt; B -&gt; C (OFF)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  addHideawayNestedStateError('Update A => B => C (ERRO)', {
+                    keys: {
+                      a: 'mock A',
+                      b: 'mock B',
+                      c: 'mock C',
+                    },
+                    path: ['a', 'b', 'c'],
+                  })
+                }
+              >
+                A -&gt; B -&gt; C (ERROR)
+              </button>
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() =>
+                  addHideawayNestedState('Update A => B => D (ON)', {
+                    keys: {
+                      a: 'mock A',
+                      b: 'mock B',
+                    },
+                    path: ['a', 'b', 'd'],
+                  })
+                }
+              >
+                A -&gt; B -&gt; D (ON) - Missing D
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  addHideawayNestedState('Update  A => B => D (OFF)', {
+                    keys: {
+                      a: 'mock A',
+                      b: 'mock B',
+                    },
+                    path: ['a', 'b', 'd'],
+                  })
+                }
+              >
+                A -&gt; B -&gt; D (ON) - Missing D
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  addHideawayNestedStateError('Update  A => B => D (ERROR)', {
+                    keys: {
+                      a: 'mock A',
+                      b: 'mock B',
+                    },
+                    path: ['a', 'b', 'd'],
+                  })
+                }
+              >
+                A -&gt; B -&gt; D (ON) - Missing D
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div className="right">
@@ -285,6 +392,7 @@ const mapStateToProps = (state: IRootState) => {
     hideawayState: getHideawayStateSelector(state),
     itIsAMultilevelSimple: getHideawayMultilevelSelector(state),
     itIsAMultilevelState: getHideawayStateMultilevelSelector(state),
+    itIsAMultilevelNested: getHideawayNestedMultilevelSelector(state),
   };
 };
 
@@ -301,6 +409,8 @@ const mapDispatchToProps = {
   addHideawaySimpleMultilevelState: addHideawaySimpleMultilevelStateAction,
   addHideawayThunkMultilevelState: addHideawayThunkMultilevelStateAction,
   addHideawayThunkMultilevelStateError: addHideawayThunkMultilevelStateErrorAction,
+  addHideawayNestedState: addHideawayNestedStateAction,
+  addHideawayNestedStateError: addHideawayNestedStateErrorAction,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

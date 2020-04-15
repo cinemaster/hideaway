@@ -1,9 +1,9 @@
 import { fetchObjectAPI } from 'apis';
 import { HideawayActions } from 'constants/hideaway';
-import { generateApiAction } from 'redux/middleware/action';
+import { generateAction } from 'redux/middleware/action';
 
 export const addHideawayThunkAction = (text: string) =>
-  generateApiAction(HideawayActions.ADD_HIDEAWAY_THUNK, () =>
+  generateAction(HideawayActions.ADD_HIDEAWAY_THUNK, () =>
     fetchObjectAPI(text),
   );
 

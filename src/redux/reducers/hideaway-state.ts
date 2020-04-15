@@ -1,24 +1,24 @@
-import { TReducer } from 'redux/middleware/contracts';
-import { HideawayReducerManagement } from 'redux/middleware/reducer';
+import { THideawayState } from 'contracts/redux';
+import { TFHideawayReducer } from 'redux/middleware/contracts';
+import { ReducerManagement } from 'redux/middleware/reducer';
 import { HideawayActions } from '../../constants/hideaway';
 
-type TSimpleHideaway = string;
-
 // Hideaway Management
-const reducerManage = new HideawayReducerManagement<TSimpleHideaway>({
+const reducerManage = new ReducerManagement<THideawayState>({
   initialState: 'Unknown',
 });
 
-const addSimpleHideawayStateReducer: TReducer<TSimpleHideaway> = (
+const addSimpleHideawayStateReducer: TFHideawayReducer<THideawayState> = (
   state,
   action,
 ) => action.text || state;
 
-reducerManage.add(
-  HideawayActions.ADD_HIDEAWAY_THUNK_STATE,
-  (state, action) => action.payload || state,
-);
+const addThunkHideawayStateReducer: TFHideawayReducer<THideawayState> = (
+  state,
+  action,
+) => action.payload || state;
 
 export const hideawayStateManagementReducers = reducerManage.combine({
   [HideawayActions.ADD_HIDEAWAY_SIMPLE_STATE]: addSimpleHideawayStateReducer,
+  [HideawayActions.ADD_HIDEAWAY_THUNK_STATE]: addThunkHideawayStateReducer,
 });

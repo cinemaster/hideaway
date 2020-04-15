@@ -1,12 +1,16 @@
-import { Action } from 'redux';
+import { AnyAction, Dispatch, MiddlewareAPI, Store } from 'redux';
 import {
-  THideawayAction,
+  IHideawayActionContent,
+  IHideawayOptions,
+  THideawayAny,
+  THideawayAnyObject,
   THideawayDispatch,
-  THideawayMiddlewareAPI,
 } from '../../contracts';
 import { hideaway } from '../../core';
 
-export type TTestState = {};
+export type TTestState = THideawayAny;
+
+export type THideawayActionContent = IHideawayActionContent<TTestState>;
 
 export interface ResponseProps {
   headers?: object;
@@ -16,12 +20,17 @@ export interface ResponseProps {
   statusText?: string;
   type?: ResponseType;
   url?: string;
-  body?: any | null; // ReadableStream<Uint8Array> | null;
+  body?: any | null;
   bodyUsed?: boolean;
 }
 
+export interface MockStore extends Store {
+  dispatchList: THideawayAny[];
+  data: THideawayAnyObject;
+}
+
 export class ResponseMock {
-  headers: object; // Headers
+  headers: object;
   ok: boolean;
   redirected: boolean;
   status: number;
@@ -43,19 +52,12 @@ export class ResponseMock {
     this.bodyUsed = props.bodyUsed || this.body !== null;
   }
 
-  arrayBuffer: () => Promise<ArrayBuffer> = () =>
-    Promise.resolve(new ArrayBuffer(1978));
-
-  blob: () => Promise<Blob> = () => Promise.resolve(new Blob());
-
-  formData: () => Promise<FormData> = () => Promise.resolve(new FormData());
-
   json: () => Promise<any> = () => {
     const body = this.body || '';
     return Promise.resolve(JSON.stringify(body));
   };
 
-  text: () => Promise<string> = () => Promise.resolve('');
+  text: () => Promise<string> = () => Promise.resolve(this.statusText);
 }
 
 export const mockAPI = (obj?: ResponseProps) => {
@@ -65,35 +67,51 @@ export const mockAPI = (obj?: ResponseProps) => {
   return api;
 };
 
-export class StoreMock<S, DispatchExt = {}> {
-  dispatchList: THideawayAction<S>[] = [];
-  data = {};
-
-  dispatch: THideawayDispatch<S, DispatchExt> = (value: any) => {
-    let result = value;
-    if (typeof value === 'function') {
-      result = value(this.dispatch, this.getState);
+export const createMockStore = (): MockStore => {
+  const dispatchList = [] as THideawayAny[];
+  const data: THideawayAnyObject = {};
+  const getState = () => data;
+  const dispatch: Dispatch<AnyAction> = (action) => {
+    let result = action;
+    if (typeof action === 'function') {
+      result = (action as Function)(dispatch, getState);
     }
-    this.dispatchList.push(result);
+    dispatchList.push(result);
     return result;
   };
+  return ({
+    dispatchList,
+    data,
+    dispatch,
+    getState,
+  } as unknown) as MockStore;
+};
 
-  getState: () => S = () => this.data as S;
-}
-
-export const triggerAction = <S = TTestState>(
-  action: THideawayAction<S>,
-  store?: StoreMock<S>,
+export const triggerAction = <S = TTestState, Dispatch = {}>(
+  action: IHideawayActionContent<S>,
+  store?: MockStore,
+  options?: IHideawayOptions,
 ) => {
-  const storeObj = store || new StoreMock<S>();
+  const storeObj = store || createMockStore();
 
-  const middlewareAPI: THideawayMiddlewareAPI<S, {}> = {
-    getState: storeObj.getState,
-    dispatch: (action: Action) => storeObj.dispatch(action),
-  };
+  const middleware = hideaway<TTestState, Dispatch>(options);
 
-  const middleware = hideaway<TTestState, {}>();
+  const middlewareAPI = (storeObj as unknown) as MiddlewareAPI<
+    THideawayDispatch<any, Dispatch>,
+    any
+  >;
 
   const hideawayResult = middleware(middlewareAPI)(storeObj.dispatch);
   return hideawayResult(action);
+};
+
+export const hideConsoleError = () => {
+  const originalConsole = console.error;
+  const consoleMock = jest.fn();
+  console.error = consoleMock;
+  return originalConsole;
+};
+
+export const restoreConsoleError = (originalConsole: any) => {
+  console.error = originalConsole;
 };

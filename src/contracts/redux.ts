@@ -1,3 +1,8 @@
+import {
+  THideawayAnyObject,
+  TFHideawayPredicate,
+} from 'redux/middleware/contracts';
+
 export type THideawayState = string | object;
 
 export interface IRootState {
@@ -8,5 +13,8 @@ export interface IRootState {
 }
 
 export interface IApiOptions {
-  error: boolean;
+  error?: boolean;
+  keys?: THideawayAnyObject;
+  path?: string[];
+  predicate?: TFHideawayPredicate;
 }
