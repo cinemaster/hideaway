@@ -1,80 +1,53 @@
 {
-  "name": "next-redux-middleware",
+  "name": "hideaway",
   "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@types/lodash": "^4.14.149",
-    "@types/node": "^13.9.8",
-    "@types/ramda": "^0.27.0",
-    "@types/react": "^16.9.0",
-    "@types/react-dom": "^16.9.0",
-    "@types/react-redux": "^7.1.7",
-    "@types/redux": "^3.6.0",
-    "lodash": "^4.17.15",
-    "ramda": "^0.27.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-redux": "^7.2.0",
-    "react-scripts": "3.4.1",
-    "redux": "^4.0.5",
-    "redux-thunk": "^2.3.0",
-    "typescript": "~3.7.2"
-  },
+  "description": "Hideaway middleware for Redux",
+  "license": "MIT",
+  "homepage": "https://github.com/Ozahata/hideaway",
+  "repository": "github:Ozahata/hideaway",
+  "bugs": "https://github.com/Ozahata/hideaway/issues",
+  "keywords": [
+    "react",
+    "react-redux",
+    "redux",
+    "thunk",
+    "hideaway",
+    "middleware",
+    "redux-middleware",
+    "flux"
+  ],
+  "author": "Fabiano Tsuneo Maurer Ozahata <fabiano@ozahata.com>",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "NODE_ENV=test jest",
-    "test:watch": "yarn test --watch",
-    "test:coverage": "yarn test --coverage",
-    "eject": "react-scripts eject",
-    "lint": "eslint src -c .eslintrc.json --ext js,jsx,ts,tsx"
+    "test": "jest",
+    "build": "rm -rf package-lock.json dist build types && webpack --mode=development --progress --profile --colors ",
+    "build-org": "rm -rf node_modules package-lock.json build types && yarn && yarn build:dev && npm link",
+    "build:dev": "webpack --mode=development --progress --profile --colors"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,ts,tsx}": [
-      "eslint -c .eslintrc.json --fix"
-    ]
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "peerDependencies": {
+    "redux": "^4"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
     "@babel/preset-typescript": "^7.9.0",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
-    "@types/jest": "^24.0.0",
-    "@typescript-eslint/eslint-plugin": "^2.25.0",
-    "@typescript-eslint/parser": "^2.25.0",
-    "eslint-config-airbnb": "^18.1.0",
-    "eslint-config-prettier": "^6.10.1",
-    "eslint-plugin-import": "^2.20.1",
-    "eslint-plugin-jest": "^23.8.2",
-    "eslint-plugin-prettier": "^3.1.2",
-    "eslint-plugin-react": "^7.19.0",
-    "eslint-plugin-react-hooks": "^2.5.1",
-    "husky": "^4.2.3",
-    "lint-staged": "^10.0.9",
-    "prettier": "^2.0.2",
-    "redux-devtools-extension": "^2.13.8",
-    "ts-jest": "^25.2.1"
+    "@types/lodash": "^4.14.150",
+    "@types/node": "^13.13.0",
+    "@types/ramda": "^0.27.3",
+    "prettier": "^2.0.4",
+    "redux": "^4.0.5",
+    "ts-loader": "^7.0.1",
+    "typescript": "^3.8.3",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "lodash": "^4.17.15",
+    "ramda": "^0.27.0"
   }
 }

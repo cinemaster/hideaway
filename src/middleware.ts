@@ -19,7 +19,7 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
   > = (apiMiddleware) => (next: Dispatch) => <R>(
     action: THideawayAction<R>,
   ) => {
-    if (HIDEAWAY in action) {
+    if (action && HIDEAWAY in action) {
       const { withExtraArgument } = options;
       const actionAPI = action as IHideawayAction<S>;
       const {
@@ -82,7 +82,7 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
     }
 
     // next requires an action
-    return next((action as unknown) as AnyAction);
+    return action ? next((action as unknown) as AnyAction) : undefined;
   };
   return middleaware;
 };

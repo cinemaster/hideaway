@@ -4,7 +4,7 @@ import { IHideawaySelectorOptions, THideawayAny } from './contracts';
 /**
  * Generate the selector to retreive the state
  * @param {S} state
- * @param {@inheritdoc IHideawaySelectorOptions} options are additional settings
+ * @param {IHideawaySelectorOptions} options are additional settings
  */
 export const generateSelector = <S, R = THideawayAny>(
   state: S,
