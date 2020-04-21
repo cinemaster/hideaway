@@ -10,12 +10,7 @@ import {
 } from './__ignore_tests__/common';
 
 describe('middleware -> core -> highaway', () => {
-  let dispatch;
   const type = 'TYPE_MOCK';
-
-  beforeEach(() => {
-    dispatch = jest.fn();
-  });
 
   it('shoud dispatch the action request', async () => {
     const store = createMockStore();

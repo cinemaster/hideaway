@@ -830,7 +830,7 @@ describe('middleware -> core -> reducer -> ReducerManagement -> combineShallow',
   });
 
   it('should combine two reducers', () => {
-    const reducers = { mockA: (_state) => true, mockB: (_state) => false };
+    const reducers = { mockA: () => true, mockB: () => false };
     const expected = { mockA: true, mockB: false };
     const state = {};
     const manager = new ReducerManagement();
