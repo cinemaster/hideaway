@@ -7,7 +7,7 @@ import {
 } from '../src/contracts';
 import { mockAPI } from './__ignore_tests__/common';
 
-describe('middleware -> action -> generateApiAction', () => {
+describe('action -> generateApiAction', () => {
   it('shoud return the simple format', () => {
     const type = 'MOCK';
     const api = (mockAPI() as unknown) as TFHideawayApi;
@@ -19,7 +19,7 @@ describe('middleware -> action -> generateApiAction', () => {
     expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
   });
 
-  it('should add one more parameters to action.', () => {
+  it('should add the complement attribute', () => {
     const type = 'MOCK';
     const complement = { mock: 'a' };
     const api = (mockAPI() as unknown) as TFHideawayApi;
@@ -32,7 +32,7 @@ describe('middleware -> action -> generateApiAction', () => {
     expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
   });
 
-  it('should add key parameters to action.', () => {
+  it('should add the key attribute', () => {
     const type = 'MOCK';
     const keys = { mock: 'a' };
     const api = (mockAPI() as unknown) as TFHideawayApi;
@@ -42,13 +42,31 @@ describe('middleware -> action -> generateApiAction', () => {
       nested: {
         keys,
         path: [],
+        allObject: undefined,
       },
     };
     const result = generateAction(type, api, { keys });
     expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
   });
 
-  it('should add predicate to action.', () => {
+  it('should be true for allObject', () => {
+    const type = 'MOCK';
+    const keys = { mock: 'a' };
+    const api = (mockAPI() as unknown) as TFHideawayApi;
+    const APIContent: IHideawayActionContent<THideawayAny> = {
+      type,
+      api,
+      nested: {
+        keys,
+        path: [],
+        allObject: true,
+      },
+    };
+    const result = generateAction(type, api, { keys, allObject: true });
+    expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
+  });
+
+  it('should add the predicate attribute', () => {
     const type = 'MOCK';
     const predicate = () => true;
     const api = (mockAPI() as unknown) as TFHideawayApi;
@@ -61,7 +79,7 @@ describe('middleware -> action -> generateApiAction', () => {
     expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
   });
 
-  it('should add onError to action.', () => {
+  it('should add the onError attribute', () => {
     const type = 'MOCK';
     const onError = () => {};
     const api = (mockAPI() as unknown) as TFHideawayApi;

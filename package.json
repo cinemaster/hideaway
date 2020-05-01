@@ -1,10 +1,13 @@
 {
   "name": "hideaway",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Hideaway middleware for Redux",
   "license": "MIT",
   "homepage": "https://github.com/Ozahata/hideaway",
-  "repository": "github:Ozahata/hideaway",
+  "repository": {
+    "type": "git",
+    "url": "github:Ozahata/hideaway"
+  },
   "bugs": "https://github.com/Ozahata/hideaway/issues",
   "keywords": [
     "react",
@@ -16,7 +19,7 @@
     "redux-middleware",
     "flux"
   ],
-  "author": "Fabiano Tsuneo Maurer Ozahata <fabiano@ozahata.com>",
+  "author": "Fabiano Tsuneo Maurer Ozahata <makoto.seijitsu@gmail.com>",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -24,14 +27,18 @@
   ],
   "scripts": {
     "test": "jest",
-    "build": "rm -rf package-lock.json dist build types && webpack --mode=development --progress --profile --colors ",
-    "build-org": "rm -rf node_modules package-lock.json build types && yarn && yarn build:dev && npm link",
-    "build:dev": "webpack --mode=development --progress --profile --colors",
-    "lint": "eslint src test --ext js,ts"
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src test --ext js,ts",
+    "clean": "rimraf dist coverage",
+    "format:check": "prettier --list-different \"{src,test}/**/*.{js,ts}\" \"**/*.md\"",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "npm run clean && npm run check-types && npm run format:check && npm run lint && npm test",
+    "prepack": "npm run clean && webpack --mode=production --progress --profile --colors"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn lint"
+      "pre-commit": "yarn lint",
+      "pre-push": "yarn test:coverage"
     }
   },
   "peerDependencies": {
@@ -40,6 +47,7 @@
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
+    "@babel/plugin-transform-runtime": "^7.9.6",
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-typescript": "^7.9.0",
     "@types/jest": "^25.2.1",
@@ -54,14 +62,26 @@
     "jest": "^25.4.0",
     "prettier": "^2.0.4",
     "redux": "^4.0.5",
+    "rimraf": "^3.0.2",
     "ts-jest": "^25.4.0",
     "ts-loader": "^7.0.1",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "webpack-merge": "^4.2.2"
   },
   "dependencies": {
     "lodash": "^4.17.15",
     "ramda": "^0.27.0"
-  }
+  },
+  "npmName": "hideaway",
+  "npmFileMap": [
+    {
+      "basePath": "/dist/",
+      "files": [
+        "*.js",
+        "*.d.js"
+      ]
+    }
+  ]
 }

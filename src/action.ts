@@ -18,14 +18,14 @@ export const generateAction = <S = THideawayAny>(
   api: TFHideawayApi,
   options: IHideawayActionOptions = {},
 ) => {
-  const { keys, path, complement, predicate, onError } = options;
+  const { keys, path, complement, predicate, onError, allObject } = options;
   const response: IHideawayActionContent<S> = {
     type,
     api,
     ...(predicate && { predicate }),
     ...(onError && { onError }),
     ...(complement && { complement }),
-    ...(keys && { nested: { keys, path: path || [] } }),
+    ...(keys && { nested: { keys, path: path || [], allObject } }),
   };
   return { [HIDEAWAY]: response } as IHideawayAction<S>;
 };

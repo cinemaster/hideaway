@@ -1,6 +1,11 @@
 import _ from 'lodash';
 import { generateAction } from '../src/action';
-import { HIDEAWAY, IHideawayAction } from '../src/contracts';
+import {
+  HIDEAWAY,
+  IHideawayAction,
+  IHideawayActionContent,
+  IHideawayNestedProps,
+} from '../src/contracts';
 import {
   createMockStore,
   mockAPI,
@@ -11,6 +16,25 @@ import {
 
 describe('middleware -> core -> highaway', () => {
   const type = 'TYPE_MOCK';
+
+  it('shoud ignore if action is an empty object', async () => {
+    const store = createMockStore();
+    const expectAction = {};
+    const action = {};
+    await triggerAction(action as IHideawayActionContent<{}>, store);
+    expect(_.first(store.dispatchList)).toStrictEqual(expectAction);
+  });
+
+  it('shoud ignore if action is undefined', async () => {
+    const store = createMockStore();
+    const expectAction = undefined;
+    const action = undefined;
+    await triggerAction(
+      (action as unknown) as IHideawayActionContent<{}>,
+      store,
+    );
+    expect(_.first(store.dispatchList)).toStrictEqual(expectAction);
+  });
 
   it('shoud dispatch the action request', async () => {
     const store = createMockStore();
@@ -61,9 +85,10 @@ describe('middleware -> core -> highaway', () => {
     const reason = 'TypeError: Failed to fetch';
     const store = createMockStore();
     const api = () => Promise.reject(reason);
-    const nested = {
+    const nested: IHideawayNestedProps = {
       keys: { A: 'a' },
       path: ['A'],
+      allObject: undefined,
     };
     const action = generateAction(type, api, { ...nested });
     await triggerAction(action, store);
@@ -145,6 +170,7 @@ describe('middleware -> core -> highaway', () => {
       nested: {
         keys,
         path: [],
+        allObject: undefined,
       },
     };
     const api = mockAPI();

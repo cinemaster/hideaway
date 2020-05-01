@@ -1,5 +1,6 @@
-import { or, pathOr } from 'ramda';
+import { pathOr } from 'ramda';
 import { IHideawaySelectorOptions, THideawayAny } from './contracts';
+import { getNestedValue } from './nested';
 
 /**
  * Generate the selector to retreive the state
@@ -13,9 +14,7 @@ export const generateSelector = <S, R = THideawayAny>(
   const { path = [], defaultValue, nested } = options;
   const result = pathOr(defaultValue, path, state);
   if (nested) {
-    const { keys, path: nestedPath } = nested;
-    const mappedList = nestedPath.map((key) => or(keys[key], key));
-    return pathOr(defaultValue, mappedList, result);
+    return getNestedValue(result, nested, defaultValue);
   }
   return result as R;
 };

@@ -98,6 +98,8 @@ export interface IHideawayActionContent<S> extends AnyAction {
  * @param {THideawayAnyObject} keys is used to generate the nest path; It can be
  * used for identification beyond the payload.
  * @param {string[]} path is used with keys to generate the nested path.
+ * @param {boolean} allObject returns the object instead the value for nested
+ * path.
  * @param {THideawayAny} complement is an addition properties for the action, to
  * be used by the reducer.
  * @param {TFHideawayPredicate} predicate skip the fetch if predicate is false.
@@ -106,6 +108,7 @@ export interface IHideawayActionContent<S> extends AnyAction {
 export interface IHideawayActionOptions {
   keys?: THideawayAnyObject;
   path?: string[];
+  allObject?: boolean;
   complement?: THideawayAny;
   predicate?: TFHideawayPredicate;
   onError?: THideawayOnError;
@@ -157,6 +160,7 @@ export interface IHideawayOptions {
 export interface IHideawayNestedProps {
   keys: THideawayAnyObject;
   path: string[];
+  allObject?: boolean;
 }
 
 // ******* THUNK *******
