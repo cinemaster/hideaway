@@ -26,7 +26,7 @@ module.exports = {
   resolve: { extensions: ['.js', '.jsx'] },
   plugins: [
     new HtmlWebpackPlugin({
-      templateContent: ({ htmlWebpackPlugin }) => `
+      templateContent: () => `
   <html>
     <head>
       <title>Counter Example</title>
@@ -37,11 +37,16 @@ module.exports = {
   </html>`,
     }),
   ],
+  devtool: 'inline-source-map',
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
     watchContentBase: true,
     hot: true,
-    inline: true,
+    overlay: {
+      errors: true,
+      warnings: true,
+    },
     publicPath: '/',
+    quiet: true,
   },
 };

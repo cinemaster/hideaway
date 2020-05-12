@@ -1,12 +1,12 @@
 import { IHideawaySelectorOptions } from '../src/contracts';
-import { generateSelector } from '../src/selector';
+import { getValue } from '../src/selector';
 
-describe('middleware -> action -> generateSelector', () => {
+describe('middleware -> action -> getValue', () => {
   it('should return the state if does not set options', () => {
     const state = {
       mock: true,
     };
-    const result = generateSelector(state);
+    const result = getValue(state, { isStateManager: false });
     expect(result).toEqual(state);
   });
 
@@ -15,8 +15,12 @@ describe('middleware -> action -> generateSelector', () => {
       mock: true,
     };
     const defaultValue = 'default mock';
-    const options: IHideawaySelectorOptions = { defaultValue, path: ['MK'] };
-    const result = generateSelector(state, options);
+    const options: IHideawaySelectorOptions = {
+      defaultValue,
+      path: ['MK'],
+      isStateManager: false,
+    };
+    const result = getValue(state, options);
     expect(result).toEqual(defaultValue);
   });
 
@@ -24,44 +28,52 @@ describe('middleware -> action -> generateSelector', () => {
     const state = {
       mock: true,
     };
-    const options: IHideawaySelectorOptions = {};
-    const result = generateSelector(state, options);
+    const options: IHideawaySelectorOptions = { isStateManager: false };
+    const result = getValue(state, options);
     expect(result).toEqual(state);
   });
 
-  it('should return undefined if it does not have state and has path', () => {
+  it('should return null if it does not have state and has path', () => {
     const state = {};
-    const options: IHideawaySelectorOptions = { path: ['mock'] };
-    const result = generateSelector(state, options);
-    expect(result).toEqual(undefined);
+    const options: IHideawaySelectorOptions = {
+      path: ['mock'],
+      isStateManager: false,
+    };
+    const result = getValue(state, options);
+    expect(result).toEqual(null);
   });
 
-  it('should return undefined if does not have the path', () => {
+  it('should return null if does not have the path', () => {
     const state = {
       mock: true,
     };
-    const options: IHideawaySelectorOptions = { path: ['hogue'] };
-    const result = generateSelector(state, options);
-    expect(result).toEqual(undefined);
+    const options: IHideawaySelectorOptions = {
+      path: ['hogue'],
+      isStateManager: false,
+    };
+    const result = getValue(state, options);
+    expect(result).toEqual(null);
   });
 
   it('should return the value if the path is found', () => {
     const state = {
       mock: true,
+      isStateManager: false,
     };
     const options: IHideawaySelectorOptions = { path: ['mock'] };
-    const result = generateSelector(state, options);
+    const result = getValue(state, options);
     expect(result).toBeTruthy();
   });
 
   it('should return the nested value if does not has a path', () => {
     const state = {
       mock: true,
+      isStateManager: false,
     };
     const options: IHideawaySelectorOptions = {
       nested: { keys: {}, path: ['mock'] },
     };
-    const result = generateSelector(state, options);
+    const result = getValue(state, options);
     expect(result).toBeTruthy();
   });
 
@@ -76,8 +88,9 @@ describe('middleware -> action -> generateSelector', () => {
     const options: IHideawaySelectorOptions = {
       path: ['mock'],
       nested: { keys: {}, path: ['a', 'b'] },
+      isStateManager: false,
     };
-    const result = generateSelector(state, options);
+    const result = getValue(state, options);
     expect(result).toBe('c');
   });
 
@@ -94,8 +107,9 @@ describe('middleware -> action -> generateSelector', () => {
       defaultValue,
       path: ['d'],
       nested: { keys: {}, path: ['a', 'b'] },
+      isStateManager: false,
     };
-    const result = generateSelector(state, options);
+    const result = getValue(state, options);
     expect(result).toBe(defaultValue);
   });
 
@@ -112,8 +126,9 @@ describe('middleware -> action -> generateSelector', () => {
       defaultValue,
       path: ['mock'],
       nested: { keys: {}, path: ['a', 'c'] },
+      isStateManager: false,
     };
-    const result = generateSelector(state, options);
+    const result = getValue(state, options);
     expect(result).toBe(defaultValue);
   });
 
@@ -130,8 +145,43 @@ describe('middleware -> action -> generateSelector', () => {
       defaultValue,
       path: ['mock'],
       nested: { keys: { A: 'a', B: 'b' }, path: ['A', 'B'] },
+      isStateManager: false,
     };
-    const result = generateSelector(state, options);
+    const result = getValue(state, options);
     expect(result).toBe('c');
+  });
+
+  it('should return the mix with the nested and the state manager', () => {
+    const state = {
+      mock: {
+        a: {
+          b: 'c',
+        },
+      },
+    };
+    const defaultValue = 'default';
+    const nested = { keys: { A: 'a', B: 'b' }, path: ['A', 'B'] };
+    const options: IHideawaySelectorOptions = {
+      defaultValue,
+      path: ['mock'],
+      nested,
+      isStateManager: true,
+    };
+    const result = getValue(state, options);
+    expect(result).toStrictEqual({
+      loading: false,
+      value: 'c',
+      error: null,
+      nested,
+    });
+  });
+
+  it('should return the state manager format', () => {
+    const result = getValue(null);
+    expect(result).toStrictEqual({
+      loading: false,
+      value: null,
+      error: null,
+    });
   });
 });

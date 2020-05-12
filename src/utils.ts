@@ -8,6 +8,9 @@ import {
   TFHideawayReducer,
 } from './contracts';
 
+export const isObject = (value: THideawayAny) =>
+  typeof value === 'object' && value !== null && value.constructor === Object;
+
 export const createReducer = <S>(
   initialState: S,
   reducers: IHideawayActionReducer<THideawayAny>,
@@ -55,7 +58,7 @@ export const combineShallow: TFHideawayCombineShallow = (reducers) => (
   const nextState: THideawayAnyObject = {};
   Object.keys(reducers).map((key: string) => {
     const reducer = reducers[key];
-    const previousStateForKey = state[key];
+    const previousStateForKey = isObject(state) ? state[key] : undefined;
     const nextStateForKey = reducer(previousStateForKey, action);
     if (typeof nextStateForKey === 'undefined') {
       const errorMessage = getUndefinedStateErrorMessage(key, action);

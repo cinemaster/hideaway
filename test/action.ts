@@ -91,4 +91,19 @@ describe('action -> generateApiAction', () => {
     const result = generateAction(type, api, { onError });
     expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
   });
+
+  it('should create an action without api', () => {
+    const type = 'MOCK';
+    const keys = { mock: 'a' };
+    const APIContent: IHideawayActionContent<THideawayAny> = {
+      type,
+      nested: {
+        keys,
+        path: [],
+        allObject: true,
+      },
+    };
+    const result = generateAction(type, undefined, { keys, allObject: true });
+    expect(result).toStrictEqual(APIContent);
+  });
 });

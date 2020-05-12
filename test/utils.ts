@@ -4,9 +4,10 @@ import {
   getUndefinedStateErrorMessage,
   combineShallow,
 } from '../src/utils';
-import { testSimpleReducer } from './__ignore_tests__/reducer';
+import { testReducer } from './__ignore_tests__/reducer';
 import { identity } from 'ramda';
 import { IHideawayActionContent } from '../src/contracts';
+import { isObject } from '../src/utils';
 
 describe('utils -> createReducer', () => {
   it('should return the initial state', () => {
@@ -52,12 +53,21 @@ describe('utils -> createReducer', () => {
     const result = reducer(state, { type: 'MOCK' });
     expect(result).toBe(expected);
   });
+
+  it('should use the state and return the action object state', () => {
+    const initialState: object | null = {};
+    const expected = { year: 1978 };
+    const reducer = createReducer(initialState, { MOCK: () => expected });
+    const state = {};
+    const result = reducer(state, { type: 'MOCK' });
+    expect(result).toBe(expected);
+  });
 });
 
 describe('utils -> compose', () => {
   it('should compose one reducer and return the initial state', () => {
     const initialState = 'Initial';
-    const composed = compose(testSimpleReducer);
+    const composed = compose(testReducer);
     const result = composed(initialState, { type: 'MOCK' });
     expect(result).toEqual(initialState);
   });
@@ -65,14 +75,14 @@ describe('utils -> compose', () => {
   it('should compose one reducer and return the action state', () => {
     const initialState = 'Initial';
     const expected = 'Action result';
-    const composed = compose(testSimpleReducer);
+    const composed = compose(testReducer);
     const result = composed(initialState, { type: 'MOCK', text: expected });
     expect(result).toEqual(expected);
   });
 
   it('should compose two reducers and return the initial state', () => {
     const initialState = 'Initial';
-    const composed = compose(testSimpleReducer, identity);
+    const composed = compose(testReducer, identity);
     const result = composed(initialState, { type: 'MOCK' });
     expect(result).toEqual(initialState);
   });
@@ -80,14 +90,14 @@ describe('utils -> compose', () => {
   it('should compose two reducers and return the action state', () => {
     const initialState = 'Initial';
     const expected = 'Action result';
-    const composed = compose(testSimpleReducer, identity);
+    const composed = compose(testReducer, identity);
     const result = composed(initialState, { type: 'MOCK', text: expected });
     expect(result).toEqual(expected);
   });
 
   it('should compose two reducers and return the MOCK state', () => {
     const text = 'MOCK';
-    const composed = compose(testSimpleReducer, identity);
+    const composed = compose(testReducer, identity);
     const result = composed(text, { type: 'MOCK' });
     expect(result).toEqual(text);
   });
@@ -95,7 +105,7 @@ describe('utils -> compose', () => {
   it('should compose two reducers and return the action state', () => {
     const text = 'MOCK';
     const expected = 'Action result';
-    const composed = compose(testSimpleReducer, identity);
+    const composed = compose(testReducer, identity);
     const result = composed(text, { type: 'MOCK', text: expected });
     expect(result).toEqual(expected);
   });
@@ -127,7 +137,7 @@ describe('utils -> getUndefinedStateErrorMessage', () => {
 
 describe('utils -> combineShallow', () => {
   it('should throw an error for state with undefined value', () => {
-    const reducers = { OK: testSimpleReducer };
+    const reducers = { OK: testReducer };
     const state = { invalid: undefined };
     const reducer = combineShallow(reducers);
     expect(() => reducer(state, { type: 'mock' })).toThrow(Error);
@@ -140,5 +150,48 @@ describe('utils -> combineShallow', () => {
     const reducer = combineShallow(reducers);
     const result = reducer(state, { type: 'mock' });
     expect(result).toStrictEqual(expected);
+  });
+
+  it('should combine two reducers if state is null', () => {
+    const reducers = { mockA: () => true, mockB: () => false };
+    const expected = { mockA: true, mockB: false };
+    const state = null;
+    const reducer = combineShallow(reducers);
+    const result = reducer(state, { type: 'mock' });
+    expect(result).toStrictEqual(expected);
+  });
+});
+
+describe('utils -> isObject', () => {
+  it('should return false for number', () => {
+    expect(isObject(1)).toBeFalsy();
+  });
+
+  it('should return false for string', () => {
+    expect(isObject('1')).toBeFalsy();
+  });
+
+  it('should return false for array', () => {
+    expect(isObject(['1'])).toBeFalsy();
+  });
+
+  it('should return false for empty array', () => {
+    expect(isObject([])).toBeFalsy();
+  });
+
+  it('should return false for null', () => {
+    expect(isObject(null)).toBeFalsy();
+  });
+
+  it('should return false for undefined', () => {
+    expect(isObject(undefined)).toBeFalsy();
+  });
+
+  it('should return true for empty object', () => {
+    expect(isObject({})).toBeTruthy();
+  });
+
+  it('should return true for object', () => {
+    expect(isObject({ '1': 1 })).toBeTruthy();
   });
 });

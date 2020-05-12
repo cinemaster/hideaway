@@ -1,7 +1,8 @@
-import { generateSelector } from "hideaway";
+import { getValue } from 'hideaway';
 
 export const getCounter = (state) => {
-  return generateSelector(state, {
-    path: ["counter"],
+  return getValue(state, {
+    path: ['counter'],
+    isStateManager: false,
   });
 };

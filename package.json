@@ -1,6 +1,6 @@
 {
   "name": "hideaway",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Hideaway middleware for Redux",
   "license": "MIT",
   "homepage": "https://github.com/Ozahata/hideaway",

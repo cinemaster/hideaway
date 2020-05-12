@@ -105,13 +105,22 @@ export const triggerAction = <S = TTestState, Dispatch = {}>(
   return hideawayResult(action);
 };
 
-export const hideConsoleError = () => {
+export const hideConsoleError = (consoleMock = jest.fn()) => {
   const originalConsole = console.error;
-  const consoleMock = jest.fn();
   console.error = consoleMock;
   return originalConsole;
 };
 
 export const restoreConsoleError = (originalConsole: any) => {
   console.error = originalConsole;
+};
+
+export const hideConsoleWarn = (consoleMock = jest.fn()) => {
+  const originalConsole = console.warn;
+  console.warn = consoleMock;
+  return originalConsole;
+};
+
+export const restoreConsoleWarn = (originalConsole: any) => {
+  console.warn = originalConsole;
 };

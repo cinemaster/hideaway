@@ -1,20 +1,29 @@
 import { pathOr } from 'ramda';
 import { IHideawaySelectorOptions, THideawayAny } from './contracts';
+import { validateStateManager } from './manager';
 import { getNestedValue } from './nested';
 
 /**
- * Generate the selector to retreive the state
- * @param {S} state
+ * Retrieve the value from state
+ * @param {S} state The state container
  * @param {IHideawaySelectorOptions} options are additional settings
  */
-export const generateSelector = <S, R = THideawayAny>(
+export const getValue = <R = THideawayAny, S = THideawayAny>(
   state: S,
   options: IHideawaySelectorOptions = {},
 ) => {
-  const { path = [], defaultValue, nested } = options;
-  const result = pathOr(defaultValue, path, state);
+  const {
+    path = [],
+    defaultValue = null,
+    nested,
+    isStateManager = true,
+  } = options;
+  let result = pathOr(defaultValue, path, state);
   if (nested) {
-    return getNestedValue(result, nested, defaultValue);
+    result = getNestedValue(result, nested, defaultValue);
+  }
+  if (isStateManager) {
+    return validateStateManager(result, nested) as R;
   }
   return result as R;
 };

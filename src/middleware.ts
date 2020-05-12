@@ -10,6 +10,7 @@ import {
   THideawayDispatch,
   THideawayReason,
 } from './contracts';
+import { managerApiRequest } from './manager';
 
 export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
   const middleaware: Middleware<
@@ -20,31 +21,35 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
     action: THideawayAction<R>,
   ) => {
     if (action && HIDEAWAY in action) {
-      const { withExtraArgument } = options;
+      const { withExtraArgument, onError: onErrorMiddleware } = options;
       const actionAPI = action as IHideawayAction<S>;
       const {
         type,
-        api = () => Promise.reject(new Error('API not set')),
+        api,
         predicate = () => true,
         nested,
         complement,
         onError: onErrorAction,
+        isStateManager = true,
       } = actionAPI[HIDEAWAY] as IHideawayActionContent<S>;
+      // onErrorAction has precedence
+      const onError = onErrorAction || onErrorMiddleware;
       const middleawareProcess: IThunk<Promise<void>, S> = (
         dispatch,
         getState,
       ) => {
-        if (!predicate(getState)) return Promise.resolve();
+        if (!predicate(getState, withExtraArgument || {}) || !api)
+          return Promise.resolve();
 
-        const request: IHideawayActionContent<S> = {
-          type: `${type}_REQUEST`,
-          ...(nested && { nested }),
-          ...(complement && { complement }),
-        };
-
-        // Inform the starting process
-        dispatch(request);
-
+        if (isStateManager) {
+          return managerApiRequest(
+            actionAPI[HIDEAWAY] as IHideawayActionContent<S>,
+            dispatch,
+            getState,
+            onError,
+            withExtraArgument,
+          );
+        }
         return api(dispatch, getState, withExtraArgument)
           .then((response: Response) => {
             if (response.ok) {
@@ -55,27 +60,25 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
           })
           .then((body: S) => {
             const response: IHideawayActionContent<S> = {
-              type: `${type}_RESPONSE`,
+              type,
               payload: body,
               ...(nested && { nested }),
               ...(complement && { complement }),
             };
             dispatch(response);
+            return Promise.resolve();
           })
           .catch((reason: THideawayReason) => {
-            const { onError: onErrorMiddleware } = options;
-            // onErrorAction has precedence
-            const onError = onErrorAction || onErrorMiddleware;
             const response: IHideawayActionContent<THideawayReason> = {
-              type: `${type}_ERROR`,
+              type,
               payload: reason,
               ...(nested && { nested }),
               ...(complement && { complement }),
             };
-            dispatch(response);
             if (onError) {
               onError(response);
             }
+            return Promise.resolve();
           });
       };
       return apiMiddleware.dispatch(middleawareProcess);

@@ -1,7 +1,7 @@
-import { generateSelector } from 'hideaway';
+import { getValue } from 'hideaway';
 
 export const getListState = (state) => {
-  return generateSelector(state, {
-    path: ['titles'],
+  return getValue(state, {
+    path: ['api'],
   });
 };

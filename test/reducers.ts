@@ -5,246 +5,470 @@ import { ReducerManagement } from '../src/reducer';
 import {
   hideConsoleError,
   restoreConsoleError,
+  restoreConsoleWarn,
+  hideConsoleWarn,
 } from './__ignore_tests__/common';
-import { testSimpleReducer } from './__ignore_tests__/reducer';
+import { isObject } from '../src/utils';
+import { testReducer } from './__ignore_tests__/reducer';
 
 describe('reducer -> ReducerManagement -> composeReducers', () => {
-  it('should display the error on console', () => {
-    const originalConsole = console.error;
-    const consoleMock = jest.fn();
-    console.error = consoleMock;
-    const expected = new TypeError('RESULT');
-    const manager = new ReducerManagement({ displayError: true });
-    const reducer = generateStatusReducer(
-      'MOCK',
-      testSimpleReducer,
-      manager.isNested,
-      manager.displayError,
-    );
-    const result = reducer({}, { type: 'MOCK_ERROR', payload: expected });
-    console.error = originalConsole;
-    expect(result.error.toString()).toEqual(expected.toString());
-    expect(consoleMock.mock.calls.length).toBe(1);
-  });
-});
+  const initialState = 'Initial state';
 
-describe('reducer -> ReducerManagement -> composeReducers', () => {
-  it('should return null if not use options', () => {
-    const manager = new ReducerManagement();
-    const result = manager.composeReducers()(undefined, {
-      type: 'MOCK_RESPONSE',
-    });
-    const expected = { error: null, loading: false, value: null };
-    expect(result).toStrictEqual(expected);
-  });
-
-  it('should return the initial state for non state manager', () => {
-    const initialState = 'Initial state';
-    const manager = new ReducerManagement({
-      initialState,
-      isStateManager: false,
-    });
-    const result = manager.composeReducers()(undefined, {
-      type: 'MOCK_RESPONSE',
-    });
-    expect(result).toBe(initialState);
-  });
-
-  it('should return the initial state for state manager', () => {
-    const initialState = 'Initial state';
-    const manager = new ReducerManagement({
-      initialState,
-      isStateManager: true,
-    });
-    const expected = {
-      loading: false,
-      value: initialState,
-      error: null,
-    };
-    const result = manager.composeReducers()(undefined, {
-      type: 'MOCK_RESPONSE',
-    });
-    expect(result).toStrictEqual(expected);
-  });
-
-  it('should return the initial state for nested without state manager and action with type only', () => {
-    const initialState = 'Initial state';
-    const manager = new ReducerManagement({
-      initialState,
-      isStateManager: false,
-      isNested: true,
-      nested: {
-        keys: {},
-        path: ['a'],
-      },
-    });
-    const expected = {
-      a: initialState,
-    };
-    const result = manager.composeReducers()(undefined, {
-      type: 'MOCK_RESPONSE',
-    });
-    expect(result).toStrictEqual(expected);
-  });
-
-  it('should return the initial state for nested with state manager and action with type only', () => {
-    const initialState = 'Initial state';
+  describe('With the nested and the state manager', () => {
+    const isStateManager = true;
+    const isNested = true;
     const nested = {
       keys: {},
       path: ['a'],
     };
-    const manager = new ReducerManagement({
+    const params = {
       initialState,
-      isStateManager: true,
-      isNested: true,
+      isStateManager,
+      isNested,
       nested,
-    });
-    const expected = {
-      a: {
-        loading: false,
-        value: initialState,
-        error: null,
-        nested,
-      },
+      reducers: { MOCK: (_state, { payload }) => payload },
     };
-    const result = manager.composeReducers()(undefined, {
+    const action = {
       type: 'MOCK_RESPONSE',
-    });
-    expect(result).toStrictEqual(expected);
-  });
+      nested,
+    };
 
-  it('should return the value from a match', () => {
-    const initialState = 'Initial state';
-    const expected = 'result';
-    const manager = new ReducerManagement({
-      initialState,
-      isStateManager: false,
+    it('should return the initial state for action with type only', () => {
+      const manager = new ReducerManagement(params);
+      const expected = {
+        a: {
+          loading: false,
+          value: initialState,
+          error: null,
+          nested,
+        },
+      };
+      const originalConsole = hideConsoleWarn();
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        nested: undefined,
+      });
+      restoreConsoleWarn(originalConsole);
+      expect(result).toStrictEqual(expected);
     });
-    manager.add('MOCK', () => expected);
-    const result = manager.composeReducers()(undefined, {
-      type: 'MOCK',
-    });
-    expect(result).toBe(expected);
-  });
 
-  it('should return a state manager', () => {
-    const initialState = 'Initial state';
-    const value = 'result';
-    const manager = new ReducerManagement({
-      initialState,
-      isStateManager: true,
+    it('should return an empty object for undefined nested', () => {
+      const value = {};
+      const manager = new ReducerManagement({ ...params, nested: undefined });
+      const originalConsole = hideConsoleWarn();
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        nested: undefined,
+      });
+      restoreConsoleWarn(originalConsole);
+      expect(result).toStrictEqual(value);
     });
-    manager.add('MOCK', () => value);
-    const result = manager.composeReducers()(
-      {},
-      {
-        type: 'MOCK_RESPONSE',
+
+    it('should allow reset the object', () => {
+      const value = {};
+      const manager = new ReducerManagement({
+        ...params,
+        reducers: { RESET_OBJ: () => ({}) },
+      });
+      const originalConsole = hideConsoleWarn();
+      const result = manager.composeReducers()(undefined, {
+        type: 'RESET_OBJ_RESPONSE',
+        nested: {
+          allObject: true,
+        },
+      });
+      restoreConsoleWarn(originalConsole);
+      expect(result).toStrictEqual(value);
+    });
+
+    it('should return a string', () => {
+      const value = 'result';
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
         payload: value,
-      },
-    );
-    expect(result.value).toBe(value);
+      });
+      expect(result.a.value).toBe(value);
+    });
+
+    it('should return a number', () => {
+      const value = 1;
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a.value).toBe(value);
+    });
+
+    it('should return an empty array', () => {
+      const value = [];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a.value).toBe(value);
+    });
+
+    it('should return an array', () => {
+      const value = ['OK'];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a.value).toBe(value);
+    });
+
+    it('should return an empty object', () => {
+      const value = {};
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a.value).toBe(value);
+    });
+
+    it('should return an object', () => {
+      const value = { OK: 1 };
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a.value).toBe(value);
+    });
+
+    it('should return null', () => {
+      const value = null;
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a.value).toBe(value);
+    });
   });
 
-  it('should return a nested path', () => {
-    const initialState = 'Initial state';
-    const value = 'result';
-    const nested = {
-      keys: {},
-      path: ['a'],
+  describe('Without the nested and the state manager', () => {
+    const isStateManager = false;
+    const params = {
+      initialState,
+      isStateManager,
+      reducers: { MOCK: (_state, { payload }) => payload },
     };
-    const manager = new ReducerManagement({
-      initialState,
-      isNested: true,
-      isStateManager: false,
-      nested,
+    const action = { type: 'MOCK' };
+
+    it('should return the initial state', () => {
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        type: 'NO_MATCH',
+      });
+      expect(result).toBe(initialState);
     });
-    manager.add('MOCK', () => value);
-    const result = manager.composeReducers()(manager.initialState, {
-      type: 'MOCK',
-      nested,
+
+    it('should return a string', () => {
+      const value = 'result';
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      expect(result).toBe(value);
     });
-    expect(result.a).toBe(value);
+
+    it('should return a number', () => {
+      const value = 1;
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      expect(result).toBe(value);
+    });
+
+    it('should return an empty array', () => {
+      const value = [];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      expect(result).toBe(value);
+    });
+
+    it('should return an array', () => {
+      const value = ['OK'];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      expect(result).toBe(value);
+    });
+
+    it('should return an empty object', () => {
+      const value = {};
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      expect(result).toBe(value);
+    });
+
+    it('should return an object', () => {
+      const value = { OK: 1 };
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      expect(result).toBe(value);
+    });
+
+    it('should return null', () => {
+      const value = null;
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      expect(result).toBe(value);
+    });
   });
 
-  it('should return a nested path with state manager', () => {
-    const initialState = 'Initial state';
-    const value = 'result';
-    const nested = {
-      keys: {},
-      path: ['a'],
+  describe('State Manager', () => {
+    const params = {
+      initialState,
+      reducers: { MOCK: (_state, { payload }) => payload },
     };
-    const manager = new ReducerManagement({
-      initialState,
-      isNested: true,
-      isStateManager: true,
-      nested,
+    const action = { type: 'MOCK_RESPONSE' };
+
+    it('should display the error on console', () => {
+      const displayError = true;
+      const consoleMock = jest.fn();
+      const originalConsole = hideConsoleError(consoleMock);
+      const expected = new TypeError('RESULT');
+      const manager = new ReducerManagement({
+        ...params,
+        displayError,
+        reducers: { MOCK: testReducer },
+      });
+      const action = { type: 'MOCK_ERROR', payload: expected };
+      const result = manager.composeReducers()(undefined, action);
+      restoreConsoleError(originalConsole);
+      expect(result.error.toString()).toEqual(expected.toString());
+      expect(consoleMock.mock.calls.length).toBe(1);
     });
-    manager.add('MOCK', () => value);
-    const result = manager.composeReducers()(manager.initialState, {
-      type: 'MOCK_RESPONSE',
-      nested,
+
+    it('should return the initial state', () => {
+      const manager = new ReducerManagement({ ...params, reducers: undefined });
+      const expected = { loading: false, value: initialState, error: null };
+      const result = manager.composeReducers()(undefined, action);
+      expect(result).toStrictEqual(expected);
     });
-    expect(result.a.value).toBe(value);
+
+    it('should return a state format', () => {
+      const value = 'result';
+      const manager = new ReducerManagement({
+        ...params,
+        reducers: { MOCK: (_state, { payload }) => payload },
+      });
+      const result = manager.composeReducers()(
+        {},
+        { ...action, payload: value },
+      );
+      expect(result.value).toBe(value);
+    });
+
+    it('should return a string', () => {
+      const value = 'OK';
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      const expected = { error: null, loading: false, value };
+      expect(result).toStrictEqual(expected);
+    });
+
+    it('should return a number', () => {
+      const value = 1;
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      const expected = { error: null, loading: false, value };
+      expect(result).toStrictEqual(expected);
+    });
+
+    it('should return an empty array', () => {
+      const value = [];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      const expected = { error: null, loading: false, value };
+      expect(result).toStrictEqual(expected);
+    });
+
+    it('should return an array', () => {
+      const value = ['OK'];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      const expected = { error: null, loading: false, value };
+      expect(result).toStrictEqual(expected);
+    });
+
+    it('should return an empty object', () => {
+      const value = {};
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      const expected = { error: null, loading: false, value };
+      expect(result).toStrictEqual(expected);
+    });
+
+    it('should return an object', () => {
+      const value = { OK: 1 };
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      const expected = { error: null, loading: false, value };
+      expect(result).toStrictEqual(expected);
+    });
+
+    it('should return null', () => {
+      const value = null;
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        payload: value,
+      });
+      const expected = { error: null, loading: false, value };
+      expect(result).toStrictEqual(expected);
+    });
   });
 
-  it('should return a nested path and joing previous nested object', () => {
-    const initialState = 'Initial state';
-    const value = 'result';
-    const nested = {
-      keys: {},
-      path: ['a', 'c'],
+  describe('Nested', () => {
+    const isStateManager = false;
+    const isNested = true;
+    const nested = { keys: {}, path: ['a'] };
+    const params = {
+      initialState,
+      isStateManager,
+      isNested,
+      nested,
+      reducers: { MOCK: (_state, { payload }) => payload },
     };
-    const manager = new ReducerManagement({
-      initialState,
-      isNested: true,
-      isStateManager: false,
-      nested: {
-        keys: {},
-        path: ['a', 'b'],
-      },
-    });
-    const expected = {
-      a: {
-        b: initialState,
-        c: value,
-      },
-    };
-    manager.add('MOCK', () => value);
-    const result = manager.composeReducers()(manager.initialState, {
-      type: 'MOCK',
-      nested,
-    });
-    expect(result).toStrictEqual(expected);
-  });
+    const action = { type: 'MOCK_RESPONSE', nested };
 
-  it('should return an empty object for isNested=true, isState=false and undefined state', () => {
-    const initialState = 'Initial state';
-    const value = {};
-    const manager = new ReducerManagement({
-      initialState,
-      isNested: true,
-      isStateManager: false,
+    it('should return the initial state for action with type only', () => {
+      const manager = new ReducerManagement(params);
+      const expected = { a: initialState };
+      const originalConsole = hideConsoleWarn();
+      const result = manager.composeReducers()(undefined, {
+        ...action,
+        nested: undefined,
+      });
+      restoreConsoleWarn(originalConsole);
+      expect(result).toStrictEqual(expected);
     });
-    manager.add('MOCK', (state) => state);
-    const result = manager.composeReducers()(undefined, {
-      type: 'MOCK_RESPONSE',
-    });
-    expect(result).toStrictEqual(value);
-  });
 
-  it('should return an empty object for isNested=true, isState=true and undefined state', () => {
-    const initialState = 'Initial state';
-    const value = {};
-    const manager = new ReducerManagement({
-      initialState,
-      isNested: true,
-      isStateManager: true,
+    it('should return a nested path and joing previous nested object', () => {
+      const value = 'result';
+      const manager = new ReducerManagement({
+        ...params,
+        nested: { keys: {}, path: ['a', 'b'] },
+      });
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        nested: { keys: {}, path: ['a', 'c'] },
+        payload: value,
+      });
+      expect(result).toStrictEqual({ a: { b: initialState, c: value } });
     });
-    manager.add('MOCK', (state) => state);
-    const result = manager.composeReducers()(undefined, {
-      type: 'MOCK_RESPONSE',
+
+    it('should warn for action without nested attribute', () => {
+      const consoleMock = jest.fn();
+      const originalConsole = hideConsoleWarn(consoleMock);
+      const manager = new ReducerManagement(params);
+      manager.composeReducers()(undefined, { ...action, nested: undefined });
+      restoreConsoleWarn(originalConsole);
+      expect(consoleMock.mock.calls.length).toBe(1);
     });
-    expect(result).toStrictEqual(value);
+
+    it('should return a string', () => {
+      const value = 'OK';
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a).toBe(value);
+    });
+
+    it('should return a number', () => {
+      const value = 1;
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a).toBe(value);
+    });
+
+    it('should return an empty array', () => {
+      const value = [];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a).toBe(value);
+    });
+
+    it('should return an array', () => {
+      const value = ['OK'];
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a).toBe(value);
+    });
+
+    it('should return an empty object', () => {
+      const value = {};
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a).toBe(value);
+    });
+
+    it('should return an object', () => {
+      const value = { OK: 1 };
+      const manager = new ReducerManagement(params);
+      const result = manager.composeReducers()(manager.initialState, {
+        ...action,
+        payload: value,
+      });
+      expect(result.a).toBe(value);
+    });
   });
 });
 
@@ -255,9 +479,12 @@ describe('reducer -> ReducerManagement -> combine', () => {
     const manager = new ReducerManagement({
       initialState,
       isStateManager: false,
+      reducers: { MOCK: (_state, { payload }) => payload },
     });
-    manager.add('MOCK', () => expected);
-    const result = manager.combine()(undefined, { type: 'MOCK' });
+    const result = manager.combine()(undefined, {
+      type: 'MOCK',
+      payload: expected,
+    });
     expect(result).toBe(expected);
   });
 
@@ -269,7 +496,7 @@ describe('reducer -> ReducerManagement -> combine', () => {
       isStateManager: false,
     });
     const result = manager.combine({
-      SIMPLE_ACTION: testSimpleReducer,
+      SIMPLE_ACTION: testReducer,
     })(undefined, {
       type: 'SIMPLE_ACTION',
       text: expected,
@@ -284,7 +511,7 @@ describe('reducer -> ReducerManagement -> combine', () => {
       initialState,
       isStateManager: false,
       reducers: {
-        SIMPLE_ACTION: testSimpleReducer,
+        SIMPLE_ACTION: testReducer,
       },
     });
     const result = manager.combine()(undefined, {
@@ -306,7 +533,7 @@ describe('reducer -> ReducerManagement -> combine', () => {
       initialState,
       isStateManager: true,
       reducers: {
-        SIMPLE_ACTION: testSimpleReducer,
+        SIMPLE_ACTION: testReducer,
       },
     });
     const result = manager.combine()(
@@ -324,114 +551,424 @@ describe('reducer -> ReducerManagement -> add', () => {
   it('should add a simple action', () => {
     const action = 'MOCK';
     const manager = new ReducerManagement({ isStateManager: false });
-    manager.add(action, testSimpleReducer);
-    expect(manager.reducers[action]).toEqual(testSimpleReducer);
+    manager.add(action, testReducer);
+    expect(manager.reducers[action]).toEqual(testReducer);
   });
 
   it('should add a state manager action', () => {
     const action = 'MOCK';
     const manager = new ReducerManagement();
-    const expected = generateStatusReducer(action, testSimpleReducer);
-    manager.add(action, testSimpleReducer);
+    const expected = generateStatusReducer(action, testReducer);
+    manager.add(action, testReducer);
     expect(manager.reducers[action].toString()).toBe(expected.toString());
   });
 });
 
 describe('reducer -> ReducerManagement -> createInitialState', () => {
-  it('should return a string if isStateManager=false; isNested=false', () => {
+  describe('Without the nested and the state manager', () => {
     const isStateManager = false;
     const isNested = false;
-    const expected = 'OK';
     const manager = new ReducerManagement();
-    const result = manager.createInitialState(
-      expected,
-      isStateManager,
-      isNested,
-    );
-    expect(result).toBe(expected);
-  });
 
-  it('should return the state manager if isStateManager=true; isNested=false', () => {
-    const isStateManager = true;
-    const isNested = false;
-    const expected = null;
-    const manager = new ReducerManagement();
-    const result = manager.createInitialState(
-      expected,
-      isStateManager,
-      isNested,
-    );
-    expect(result).toStrictEqual({
-      loading: false,
-      value: null,
-      error: null,
+    it('should return a string', () => {
+      const expected = 'OK';
+      const result = manager.createInitialState(
+        expected,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toBe(expected);
+    });
+
+    it('should return a number', () => {
+      const expected = 1;
+      const result = manager.createInitialState(
+        expected,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toBe(expected);
+    });
+
+    it('should return an empty array', () => {
+      const expected = [];
+      const result = manager.createInitialState(
+        expected,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toBe(expected);
+    });
+
+    it('should return an array', () => {
+      const expected = ['OK'];
+      const result = manager.createInitialState(
+        expected,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toBe(expected);
+    });
+
+    it('should return an empty object', () => {
+      const expected = {};
+      const result = manager.createInitialState(
+        expected,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toBe(expected);
+    });
+
+    it('should return an object', () => {
+      const expected = { OK: 1 };
+      const result = manager.createInitialState(
+        expected,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toBe(expected);
+    });
+
+    it('should return null', () => {
+      const expected = null;
+      const result = manager.createInitialState(
+        expected,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toBe(expected);
     });
   });
 
-  it('should return an empty object if isStateManager=false; isNested=true; nested=undefined', () => {
-    const isStateManager = false;
-    const isNested = true;
-    const expected = null;
-    const manager = new ReducerManagement();
-    const originalConsole = hideConsoleError();
-    const result = manager.createInitialState(
-      expected,
-      isStateManager,
-      isNested,
-    );
-    restoreConsoleError(originalConsole);
-    expect(_.isEmpty(result)).toBeTruthy();
-    expect(_.isObject(result)).toBeTruthy();
-  });
-
-  it('should return the value if isStateManager=false; isNested=true; with nested', () => {
-    const isStateManager = false;
-    const isNested = true;
-    const nested = { keys: {}, path: ['mock'] };
-    const expected = null;
-    const manager = new ReducerManagement();
-    const result = manager.createInitialState(
-      expected,
-      isStateManager,
-      isNested,
-      nested,
-    );
-    expect(result).toStrictEqual({
-      mock: expected,
-    });
-  });
-
-  it('should return an empty object if isStateManager=true; isNested=true; nested=undefined', () => {
+  describe('With the nested and the state manager', () => {
     const isStateManager = true;
     const isNested = true;
-    const originalConsole = hideConsoleError();
     const manager = new ReducerManagement({
       isStateManager,
       isNested,
     });
-    const result = manager.createInitialState(null, isStateManager, isNested);
-    restoreConsoleError(originalConsole);
-    expect(result).toStrictEqual({});
+
+    it('should return an empty object for undefined nested', () => {
+      const result = manager.createInitialState(null, isStateManager, isNested);
+      expect(result).toStrictEqual({});
+    });
+
+    it('should return a string', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = 'OK';
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: { loading: false, value, error: null, nested },
+      });
+    });
+
+    it('should return a number', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = 1;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: { loading: false, value, error: null, nested },
+      });
+    });
+
+    it('should return an empty array', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = [];
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: { loading: false, value, error: null, nested },
+      });
+    });
+
+    it('should return an array', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = ['OK'];
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: { loading: false, value, error: null, nested },
+      });
+    });
+
+    it('should return an empty object', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = {};
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: { loading: false, value, error: null, nested },
+      });
+    });
+
+    it('should return an object', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = { OK: 1 };
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: { loading: false, value, error: null, nested },
+      });
+    });
+
+    it('should return null', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = null;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: { loading: false, value, error: null, nested },
+      });
+    });
   });
 
-  it('should return the value if isStateManager=true; isNested=true; with nested', () => {
+  describe('State Manager', () => {
     const isStateManager = true;
-    const isNested = true;
-    const nested = { keys: {}, path: ['mock'] };
-    const originalConsole = hideConsoleError();
-    const manager = new ReducerManagement({
-      isStateManager,
-      isNested,
+    const isNested = false;
+    const manager = new ReducerManagement();
+
+    it('should return a string', () => {
+      const value = 'OK';
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toStrictEqual({
+        loading: false,
+        value,
+        error: null,
+      });
     });
-    const result = manager.createInitialState(
-      null,
-      isStateManager,
-      isNested,
-      nested,
-    );
-    restoreConsoleError(originalConsole);
-    expect(result).toStrictEqual({
-      mock: { loading: false, value: null, error: null, nested },
+
+    it('should return a number', () => {
+      const value = 1;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toStrictEqual({
+        loading: false,
+        value,
+        error: null,
+      });
+    });
+
+    it('should return an empty array', () => {
+      const value = [];
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toStrictEqual({
+        loading: false,
+        value,
+        error: null,
+      });
+    });
+
+    it('should return an array', () => {
+      const value = ['OK'];
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toStrictEqual({
+        loading: false,
+        value,
+        error: null,
+      });
+    });
+
+    it('should return an empty object', () => {
+      const value = {};
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toStrictEqual({
+        loading: false,
+        value,
+        error: null,
+      });
+    });
+
+    it('should return an object', () => {
+      const value = { OK: 1 };
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toStrictEqual({
+        loading: false,
+        value,
+        error: null,
+      });
+    });
+
+    it('should return null', () => {
+      const value = null;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(result).toStrictEqual({
+        loading: false,
+        value,
+        error: null,
+      });
+    });
+  });
+
+  describe('Nested', () => {
+    const isStateManager = false;
+    const isNested = true;
+    const manager = new ReducerManagement();
+
+    it('should return an empty object for undefined nested', () => {
+      const value = null;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+      );
+      expect(_.isEmpty(result)).toBeTruthy();
+      expect(isObject(result)).toBeTruthy();
+    });
+
+    it('should return a string', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = 'OK';
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: value,
+      });
+    });
+
+    it('should return a number', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = 1;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: value,
+      });
+    });
+
+    it('should return an empty array', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = [];
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: value,
+      });
+    });
+
+    it('should return an array', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = ['OK'];
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: value,
+      });
+    });
+
+    it('should return an empty object', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = {};
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: value,
+      });
+    });
+
+    it('should return an object', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = { OK: 1 };
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: value,
+      });
+    });
+
+    it('should return null', () => {
+      const nested = { keys: {}, path: ['mock'] };
+      const value = null;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        nested,
+      );
+      expect(result).toStrictEqual({
+        mock: value,
+      });
     });
   });
 });

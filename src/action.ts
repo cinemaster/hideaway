@@ -8,24 +8,36 @@ import {
 } from './contracts';
 
 /**
- * @param {string} type is the Action type to reducer use.
+ * @param {string} type property that indicates the type of action being
+ * performed.
  * @param {TFHideawayApi<S>} api is a function that returns a promise. The
  * function receive (dispatch, getState, extra) from the middleware.
  * @param {IHideawayActionOptions} options are additional settings.
  */
 export const generateAction = <S = THideawayAny>(
   type: string,
-  api: TFHideawayApi,
+  api: TFHideawayApi | undefined,
   options: IHideawayActionOptions = {},
 ) => {
-  const { keys, path, complement, predicate, onError, allObject } = options;
-  const response: IHideawayActionContent<S> = {
+  const {
+    keys,
+    path,
+    complement,
+    predicate,
+    onError,
+    allObject,
+    isStateManager,
+  } = options;
+  const action: IHideawayActionContent<S> = {
     type,
-    api,
     ...(predicate && { predicate }),
     ...(onError && { onError }),
     ...(complement && { complement }),
     ...(keys && { nested: { keys, path: path || [], allObject } }),
+    ...(isStateManager !== undefined && { isStateManager }),
   };
-  return { [HIDEAWAY]: response } as IHideawayAction<S>;
+  if (api && typeof api === 'function') {
+    return { [HIDEAWAY]: { ...action, api } } as IHideawayAction<S>;
+  }
+  return action as IHideawayAction<S>;
 };

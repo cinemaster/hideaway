@@ -1,52 +1,57 @@
 import { IHideawayNestedProps } from '../src/contracts';
-import { generateStatusReducer, removeState } from '../src/manager';
+import {
+  generateStatusReducer,
+  hasStateObject,
+  removeState,
+  validateStateManager,
+} from '../src/manager';
 import {
   hideConsoleError,
   restoreConsoleError,
 } from './__ignore_tests__/common';
-import { testSimpleReducer } from './__ignore_tests__/reducer';
+import { testReducer } from './__ignore_tests__/reducer';
 
 describe('manager -> generateStatusReducer', () => {
   it('should return loading as false for simple action', () => {
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK' });
     expect(result.loading).toBeFalsy();
   });
 
   it('should return loading as false for action RESPONSE', () => {
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK_RESPONSE' });
     expect(result.loading).toBeFalsy();
   });
 
   it('should return loading as false for action ERROR', () => {
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK_ERROR', payload: 'mock' });
     expect(result.loading).toBeFalsy();
   });
 
   it('should return loading as true', () => {
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK_REQUEST' });
     expect(result.loading).toBeTruthy();
   });
 
   it('should return the correct value from the reducer', () => {
     const expected = 'RESULT';
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK_RESPONSE', text: expected });
     expect(result.value).toEqual(expected);
   });
 
   it('should return null for the error', () => {
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK' });
     expect(result.error).toEqual(null);
   });
 
   it('should return a value for the error', () => {
     const expected = 'RESULT';
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK_ERROR', payload: expected });
     expect(result.error).toEqual(expected);
   });
@@ -54,27 +59,26 @@ describe('manager -> generateStatusReducer', () => {
   it('should display the error without console', () => {
     const originalConsole = hideConsoleError();
     const expected = new TypeError('RESULT');
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer);
+    const reducer = generateStatusReducer('MOCK', testReducer);
     const result = reducer({}, { type: 'MOCK_ERROR', payload: expected });
     restoreConsoleError(originalConsole);
     expect(result.error.toString()).toEqual(expected.toString());
   });
 
   it('should display the error on console', () => {
-    const originalConsole = console.error;
     const consoleMock = jest.fn();
-    console.error = consoleMock;
+    const originalConsole = hideConsoleError(consoleMock);
     const expected = new TypeError('RESULT');
     const isNested = false;
     const displayError = true;
     const reducer = generateStatusReducer(
       'MOCK',
-      testSimpleReducer,
+      testReducer,
       isNested,
       displayError,
     );
     const result = reducer({}, { type: 'MOCK_ERROR', payload: expected });
-    console.error = originalConsole;
+    restoreConsoleError(originalConsole);
     expect(result.error.toString()).toEqual(expected.toString());
     expect(consoleMock.mock.calls.length).toBe(1);
   });
@@ -84,7 +88,7 @@ describe('manager -> generateStatusReducer', () => {
     const originalConsole = hideConsoleError();
     const isNested = true;
     restoreConsoleError(originalConsole);
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer, isNested);
+    const reducer = generateStatusReducer('MOCK', testReducer, isNested);
     const result = reducer({}, { type: 'MOCK_RESPONSE' });
     expect(result.nested).toEqual(expected);
   });
@@ -96,7 +100,7 @@ describe('manager -> generateStatusReducer', () => {
     const originalConsole = hideConsoleError();
     const isNested = true;
     restoreConsoleError(originalConsole);
-    const reducer = generateStatusReducer('MOCK', testSimpleReducer, isNested);
+    const reducer = generateStatusReducer('MOCK', testReducer, isNested);
     const result = reducer({}, { type: 'MOCK_REQUEST', nested: expected });
     expect(result.nested).toEqual(expected);
   });
@@ -116,5 +120,41 @@ describe('utils -> removeState', () => {
       const result = removeState(type);
       expect(result).toEqual(text);
     });
+  });
+});
+
+describe('utils -> hasStateObject', () => {
+  it('should return false for value that is not an object', () => {
+    expect(hasStateObject(1)).toBeFalsy();
+  });
+
+  it('should return false for object without state manager', () => {
+    expect(hasStateObject({})).toBeFalsy();
+  });
+
+  it('should return true for object with state manager', () => {
+    expect(
+      hasStateObject({ loading: true, value: null, error: null }),
+    ).toBeTruthy();
+  });
+});
+
+describe('utils -> validateStateManager', () => {
+  it('should return the state manager with the value', () => {
+    const value = 1;
+    expect(validateStateManager(value)).toStrictEqual({
+      loading: false,
+      value,
+      error: null,
+    });
+  });
+
+  it('should return the state manager', () => {
+    const value = {
+      loading: false,
+      value: null,
+      error: null,
+    };
+    expect(validateStateManager(value)).toStrictEqual(value);
   });
 });

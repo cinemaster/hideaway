@@ -7,8 +7,13 @@ import {
   TFHideawayReducer,
   THideawayAny,
   TStateOrNull,
+  IHideawayStatusManager,
 } from './contracts';
-import { generateStatusReducer, removeState } from './manager';
+import {
+  generateStatusReducer,
+  removeState,
+  validateStateManager,
+} from './manager';
 import { generateNested, reducerNested } from './nested';
 
 /**
@@ -69,12 +74,7 @@ export class ReducerManagement<S> {
   ) => {
     let result = value as THideawayAny;
     if (isStateManager) {
-      result = {
-        loading: false,
-        value,
-        error: null,
-        ...(nested && { nested }),
-      };
+      result = validateStateManager(value, nested);
     }
     if (isNested) {
       if (
@@ -121,16 +121,23 @@ export class ReducerManagement<S> {
     const typeWithoutStateMatched = _.has(this.reducers, typeWithoutState);
     const hasMatched = typeMatched || typeWithoutStateMatched;
     // Ignore value, because it doesn't match with the requirement
-    if (this.isNested && nested === undefined) {
-      return currentState;
-    }
     if (hasMatched) {
+      if (this.isNested && nested === undefined) {
+        console.warn('The nested attributes are missing');
+        return currentState;
+      }
       let currentValue = currentState;
       const reducer = typeMatched
         ? this.reducers[type]
         : this.reducers[typeWithoutState];
       if (this.isNested && action.nested) {
-        currentValue = reducerNested(currentState, action, reducer);
+        // Enable to reset the object
+        const isStateWithAllObject =
+          this.isStateManager && action.nested.allObject;
+        const result = reducerNested(currentState, action, reducer);
+        currentValue = isStateWithAllObject
+          ? ((result as unknown) as IHideawayStatusManager).value
+          : result;
       } else {
         currentValue = reducer(currentState, action);
       }

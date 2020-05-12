@@ -1,8 +1,5 @@
 import { TFHideawayReducer } from '../../src/contracts';
+import { TTestState } from './common';
 
-type TSimpleHideaway = string;
-
-export const testSimpleReducer: TFHideawayReducer<TSimpleHideaway> = (
-  state,
-  action,
-) => action.text || state;
+export const testReducer: TFHideawayReducer<TTestState> = (state, action) =>
+  action.text || state;

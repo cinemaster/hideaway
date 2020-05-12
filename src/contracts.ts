@@ -13,6 +13,7 @@ export type TFHideawayGetState<S> = () => S;
 
 export type TFHideawayPredicate = <S>(
   getState: TFHideawayGetState<S>,
+  withExtraArgument: THideawayAnyObject,
 ) => boolean;
 
 /**
@@ -32,7 +33,7 @@ export type TFHideawayApi = <S, DispatchExt = {}>(
 ) => typeof Promise.prototype;
 
 export type THideawayOnError = (
-  response: IHideawayAction<THideawayAny>,
+  response: IHideawayActionContent<THideawayAny>,
 ) => void;
 
 export type TFHideawayCombineShallow = (
@@ -72,6 +73,12 @@ export interface IHideawayAction<S = THideawayAnyObject> extends AnyAction {
   [HIDEAWAY]?: IHideawayActionContent<S>;
 }
 
+export interface IHideawayStatusManager<R = THideawayAny, E = THideawayAny> {
+  loading: boolean;
+  value: R;
+  error: E;
+}
+
 /**
  * @template S The state expected to be used on reducer.
  * @param {string} type is the action name.
@@ -84,6 +91,10 @@ export interface IHideawayAction<S = THideawayAnyObject> extends AnyAction {
  * used by the reducer.
  * @param {TFHideawayPredicate} predicate skip the fetch if predicate is false.
  * @param {THideawayOnError} onError is a custom error handler for api response.
+ * @param {Response} response is the result of the api call. It not response if
+ * it does not have status code. (e.g: Invalid url)
+ * @param {boolean} isStateManager define how to handle the api request. The
+ * default is true (It handles REQUEST, RESPONSE, ERROR).
  */
 export interface IHideawayActionContent<S> extends AnyAction {
   api?: TFHideawayApi;
@@ -92,6 +103,8 @@ export interface IHideawayActionContent<S> extends AnyAction {
   complement?: THideawayAny;
   predicate?: TFHideawayPredicate;
   onError?: THideawayOnError;
+  response?: Response;
+  isStateManager?: boolean;
 }
 
 /**
@@ -101,9 +114,11 @@ export interface IHideawayActionContent<S> extends AnyAction {
  * @param {boolean} allObject returns the object instead the value for nested
  * path.
  * @param {THideawayAny} complement is an addition properties for the action, to
- * be used by the reducer.
+ * be used inside the reducer.
  * @param {TFHideawayPredicate} predicate skip the fetch if predicate is false.
  * @param {THideawayOnError} onError is a custom error handler for api response.
+ * @param {boolean} isStateManager define how to handle the api request. The
+ * default is true (It handles REQUEST, RESPONSE, ERROR).
  */
 export interface IHideawayActionOptions {
   keys?: THideawayAnyObject;
@@ -112,6 +127,7 @@ export interface IHideawayActionOptions {
   complement?: THideawayAny;
   predicate?: TFHideawayPredicate;
   onError?: THideawayOnError;
+  isStateManager?: boolean;
 }
 
 /**
@@ -137,15 +153,18 @@ export interface IHideawayReducerOptions<S> {
 
 /**
  * @param {string[]} path location of the requested state.
- * @param {any} defaultValue value to return if doesn't find the path
- * (default: undefined).
+ * @param {any} defaultValue value to return if doesn't find the path.
+ * (default: undefined)
  * @param {IHideawayNestedProps} nested contains the keys and the path to
  * retrieve the value from the nested path.
+ * @param {boolean} isStateManager inform to return the loading, value and error
+ * when the result is empty or null.
  */
 export interface IHideawaySelectorOptions {
   path?: string[];
   defaultValue?: THideawayAny;
   nested?: IHideawayNestedProps;
+  isStateManager?: boolean;
 }
 
 export interface IHideawayOptions {
