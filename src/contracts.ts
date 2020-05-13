@@ -119,8 +119,9 @@ export interface IHideawayActionContent<S> extends AnyAction {
  * @param {THideawayOnError} onError is a custom error handler for api response.
  * @param {boolean} isStateManager define how to handle the api request. The
  * default is true (It handles REQUEST, RESPONSE, ERROR).
+ * @param {S} payload is the state expected to be used on reducer.
  */
-export interface IHideawayActionOptions {
+export interface IHideawayActionOptions<S = THideawayAny> {
   keys?: THideawayAnyObject;
   path?: string[];
   allObject?: boolean;
@@ -128,6 +129,7 @@ export interface IHideawayActionOptions {
   predicate?: TFHideawayPredicate;
   onError?: THideawayOnError;
   isStateManager?: boolean;
+  payload?: S;
 }
 
 /**

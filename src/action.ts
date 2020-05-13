@@ -17,7 +17,7 @@ import {
 export const generateAction = <S = THideawayAny>(
   type: string,
   api: TFHideawayApi | undefined,
-  options: IHideawayActionOptions = {},
+  options: IHideawayActionOptions<S> = {},
 ) => {
   const {
     keys,
@@ -27,6 +27,7 @@ export const generateAction = <S = THideawayAny>(
     onError,
     allObject,
     isStateManager,
+    payload,
   } = options;
   const action: IHideawayActionContent<S> = {
     type,
@@ -35,6 +36,7 @@ export const generateAction = <S = THideawayAny>(
     ...(complement && { complement }),
     ...(keys && { nested: { keys, path: path || [], allObject } }),
     ...(isStateManager !== undefined && { isStateManager }),
+    ...(payload && { payload }),
   };
   if (api && typeof api === 'function') {
     return { [HIDEAWAY]: { ...action, api } } as IHideawayAction<S>;

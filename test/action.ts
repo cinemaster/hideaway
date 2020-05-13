@@ -8,9 +8,11 @@ import {
 import { mockAPI } from './__ignore_tests__/common';
 
 describe('action -> generateApiAction', () => {
+  const type = 'MOCK';
+  const keys = { mock: 'a' };
+  const api = (mockAPI() as unknown) as TFHideawayApi;
+
   it('shoud return the simple format', () => {
-    const type = 'MOCK';
-    const api = (mockAPI() as unknown) as TFHideawayApi;
     const APIContent: IHideawayActionContent<THideawayAny> = {
       type,
       api,
@@ -20,22 +22,16 @@ describe('action -> generateApiAction', () => {
   });
 
   it('should add the complement attribute', () => {
-    const type = 'MOCK';
-    const complement = { mock: 'a' };
-    const api = (mockAPI() as unknown) as TFHideawayApi;
     const APIContent: IHideawayActionContent<THideawayAny> = {
       type,
       api,
-      complement,
+      complement: keys,
     };
-    const result = generateAction(type, api, { complement });
+    const result = generateAction(type, api, { complement: keys });
     expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
   });
 
   it('should add the key attribute', () => {
-    const type = 'MOCK';
-    const keys = { mock: 'a' };
-    const api = (mockAPI() as unknown) as TFHideawayApi;
     const APIContent: IHideawayActionContent<THideawayAny> = {
       type,
       api,
@@ -50,9 +46,6 @@ describe('action -> generateApiAction', () => {
   });
 
   it('should be true for allObject', () => {
-    const type = 'MOCK';
-    const keys = { mock: 'a' };
-    const api = (mockAPI() as unknown) as TFHideawayApi;
     const APIContent: IHideawayActionContent<THideawayAny> = {
       type,
       api,
@@ -67,9 +60,7 @@ describe('action -> generateApiAction', () => {
   });
 
   it('should add the predicate attribute', () => {
-    const type = 'MOCK';
     const predicate = () => true;
-    const api = (mockAPI() as unknown) as TFHideawayApi;
     const APIContent: IHideawayActionContent<THideawayAny> = {
       type,
       api,
@@ -80,9 +71,7 @@ describe('action -> generateApiAction', () => {
   });
 
   it('should add the onError attribute', () => {
-    const type = 'MOCK';
     const onError = () => {};
-    const api = (mockAPI() as unknown) as TFHideawayApi;
     const APIContent: IHideawayActionContent<THideawayAny> = {
       type,
       api,
@@ -93,8 +82,6 @@ describe('action -> generateApiAction', () => {
   });
 
   it('should create an action without api', () => {
-    const type = 'MOCK';
-    const keys = { mock: 'a' };
     const APIContent: IHideawayActionContent<THideawayAny> = {
       type,
       nested: {
@@ -105,5 +92,15 @@ describe('action -> generateApiAction', () => {
     };
     const result = generateAction(type, undefined, { keys, allObject: true });
     expect(result).toStrictEqual(APIContent);
+  });
+
+  it('should send the payload', () => {
+    const payload = keys;
+    const result = generateAction(type, undefined, {
+      keys,
+      allObject: true,
+      payload,
+    });
+    expect(result.payload).toStrictEqual(keys);
   });
 });

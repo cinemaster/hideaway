@@ -56,6 +56,7 @@ export const generateStatusReducer = (
   };
   const valueReducer: IHideawayActionReducer<THideawayAny> = {
     [`${prefix}_RESPONSE`]: reducer,
+    [`${prefix}_ERROR`]: () => null,
   };
   const errorReducer: IHideawayActionReducer<THideawayAny> = {
     [`${prefix}_ERROR`]: (_state, { payload }) => {

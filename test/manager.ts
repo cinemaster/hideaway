@@ -56,6 +56,15 @@ describe('manager -> generateStatusReducer', () => {
     expect(result.error).toEqual(expected);
   });
 
+  it('should reset the value attribute', () => {
+    const reducer = generateStatusReducer('MOCK', testReducer);
+    const result = reducer(
+      { loading: true, value: 'mock', error: null },
+      { type: 'MOCK_ERROR', payload: 'ERROR' },
+    );
+    expect(result.value).toBeNull();
+  });
+
   it('should display the error without console', () => {
     const originalConsole = hideConsoleError();
     const expected = new TypeError('RESULT');
