@@ -18,7 +18,7 @@ describe('action -> generateApiAction', () => {
       api,
     };
     const result = generateAction(type, api);
-    expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
+    expect(result).toStrictEqual({ type, [HIDEAWAY]: APIContent });
   });
 
   it('should add the complement attribute', () => {
@@ -28,7 +28,7 @@ describe('action -> generateApiAction', () => {
       complement: keys,
     };
     const result = generateAction(type, api, { complement: keys });
-    expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
+    expect(result).toStrictEqual({ type, [HIDEAWAY]: APIContent });
   });
 
   it('should add the key attribute', () => {
@@ -42,7 +42,7 @@ describe('action -> generateApiAction', () => {
       },
     };
     const result = generateAction(type, api, { keys });
-    expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
+    expect(result).toStrictEqual({ type, [HIDEAWAY]: APIContent });
   });
 
   it('should be true for allObject', () => {
@@ -56,7 +56,7 @@ describe('action -> generateApiAction', () => {
       },
     };
     const result = generateAction(type, api, { keys, allObject: true });
-    expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
+    expect(result).toStrictEqual({ type, [HIDEAWAY]: APIContent });
   });
 
   it('should add the predicate attribute', () => {
@@ -67,7 +67,7 @@ describe('action -> generateApiAction', () => {
       predicate,
     };
     const result = generateAction(type, api, { predicate });
-    expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
+    expect(result).toStrictEqual({ type, [HIDEAWAY]: APIContent });
   });
 
   it('should add the onError attribute', () => {
@@ -78,7 +78,7 @@ describe('action -> generateApiAction', () => {
       onError,
     };
     const result = generateAction(type, api, { onError });
-    expect(result).toStrictEqual({ [HIDEAWAY]: APIContent });
+    expect(result).toStrictEqual({ type, [HIDEAWAY]: APIContent });
   });
 
   it('should create an action without api', () => {

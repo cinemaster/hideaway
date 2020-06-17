@@ -39,7 +39,7 @@ export const generateAction = <S = THideawayAny>(
     ...(payload && { payload }),
   };
   if (api && typeof api === 'function') {
-    return { [HIDEAWAY]: { ...action, api } } as IHideawayAction<S>;
+    return { type, [HIDEAWAY]: { ...action, api } } as IHideawayAction<S>;
   }
   return action as IHideawayAction<S>;
 };
