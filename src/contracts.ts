@@ -22,18 +22,22 @@ export type TFHideawayPredicate = <S>(
  */
 export type THideawayReason = string | Response;
 
-export type THideawayAction<S = THideawayAny> =
+export type THideawayAction<S = THideawayAny, DispatchExt = {}> =
   | AnyAction
-  | IHideawayActionContent<S>;
+  | IHideawayActionContent<S, DispatchExt>;
 
-export type TFHideawayApi = <S, DispatchExt = {}>(
+export type TFHideawayApi<S = THideawayAnyObject, DispatchExt = {}> = (
   dispatch: THideawayDispatch<S, DispatchExt>,
   getState: TFHideawayGetState<S>,
   withExtraArgument?: THideawayAnyObject,
 ) => typeof Promise.prototype;
 
-export type THideawayOnError = (
-  response: IHideawayActionContent<THideawayAny>,
+export type THideawayOnError<S, DispatchExt = {}> = (
+  actionContent: IHideawayActionContent<THideawayAny, DispatchExt>,
+  getState: TFHideawayGetState<S>,
+  dispatch: THideawayDispatch<S, DispatchExt>,
+  onError?: THideawayOnError<S, DispatchExt>,
+  withExtraArgument?: THideawayAnyObject,
 ) => void;
 
 export type TFHideawayCombineShallow = (
@@ -69,8 +73,9 @@ export interface IHideawayStatusReducer extends IHideawayActionReducer {
   error: TFHideawayReducer;
 }
 
-export interface IHideawayAction<S = THideawayAnyObject> extends AnyAction {
-  [HIDEAWAY]?: IHideawayActionContent<S>;
+export interface IHideawayAction<S = THideawayAnyObject, DispatchExt = {}>
+  extends AnyAction {
+  [HIDEAWAY]?: IHideawayActionContent<S, DispatchExt>;
 }
 
 export interface IHideawayStatusManager<R = THideawayAny, E = THideawayAny> {
@@ -96,13 +101,13 @@ export interface IHideawayStatusManager<R = THideawayAny, E = THideawayAny> {
  * @param {boolean} isStateManager define how to handle the api request. The
  * default is true (It handles REQUEST, RESPONSE, ERROR).
  */
-export interface IHideawayActionContent<S> extends AnyAction {
-  api?: TFHideawayApi;
+export interface IHideawayActionContent<S, DispatchExt = {}> extends AnyAction {
+  api?: TFHideawayApi<S, DispatchExt>;
   payload?: S;
   nested?: IHideawayNestedProps;
   complement?: THideawayAny;
   predicate?: TFHideawayPredicate;
-  onError?: THideawayOnError;
+  onError?: THideawayOnError<S, DispatchExt>;
   response?: Response;
   isStateManager?: boolean;
 }
@@ -127,7 +132,7 @@ export interface IHideawayActionOptions<S = THideawayAny> {
   allObject?: boolean;
   complement?: THideawayAny;
   predicate?: TFHideawayPredicate;
-  onError?: THideawayOnError;
+  onError?: THideawayOnError<S>;
   isStateManager?: boolean;
   payload?: S;
 }
@@ -169,8 +174,8 @@ export interface IHideawaySelectorOptions {
   isStateManager?: boolean;
 }
 
-export interface IHideawayOptions {
-  onError?: THideawayOnError;
+export interface IHideawayOptions<S, DispatchExt> {
+  onError?: THideawayOnError<S, DispatchExt>;
   withExtraArgument?: THideawayAnyObject;
 }
 
@@ -186,7 +191,7 @@ export interface IHideawayNestedProps {
 
 // ******* THUNK *******
 export type THideawayDispatch<S, DispatchExt> = Dispatch &
-  IThunkDispatch<S> &
+  IThunkDispatch<S, DispatchExt> &
   DispatchExt;
 
 export interface IThunk<R, S, DispatchExt = {}> {

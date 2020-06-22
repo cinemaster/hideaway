@@ -90,7 +90,7 @@ export const createMockStore = (): MockStore => {
 export const triggerAction = <S = TTestState, Dispatch = {}>(
   action: IHideawayActionContent<S>,
   store?: MockStore,
-  options?: IHideawayOptions,
+  options?: IHideawayOptions<S, Dispatch>,
 ) => {
   const storeObj = store || createMockStore();
 

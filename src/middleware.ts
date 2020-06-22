@@ -5,24 +5,25 @@ import {
   IHideawayActionContent,
   IHideawayOptions,
   IThunk,
-  IThunkDispatch,
   THideawayAction,
   THideawayDispatch,
   THideawayReason,
 } from './contracts';
 import { managerApiRequest } from './manager';
 
-export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
+export const hideaway = <S, DispatchExt = {}>(
+  options: IHideawayOptions<S, DispatchExt> = {},
+) => {
   const middleaware: Middleware<
-    IThunkDispatch<S, DispatchExt>,
+    DispatchExt,
     S,
     THideawayDispatch<S, DispatchExt>
   > = (apiMiddleware) => (next: Dispatch) => <R>(
-    action: THideawayAction<R>,
+    action: THideawayAction<R, DispatchExt>,
   ) => {
     if (action && HIDEAWAY in action) {
       const { withExtraArgument, onError: onErrorMiddleware } = options;
-      const actionAPI = action as IHideawayAction<S>;
+      const actionAPI = action as IHideawayAction<S, DispatchExt>;
       const {
         type,
         api,
@@ -31,10 +32,8 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
         complement,
         onError: onErrorAction,
         isStateManager = true,
-      } = actionAPI[HIDEAWAY] as IHideawayActionContent<S>;
-      // onErrorAction has precedence
-      const onError = onErrorAction || onErrorMiddleware;
-      const middleawareProcess: IThunk<Promise<void>, S> = (
+      } = actionAPI[HIDEAWAY] as IHideawayActionContent<S, DispatchExt>;
+      const middleawareProcess: IThunk<Promise<void>, S, DispatchExt> = (
         dispatch,
         getState,
       ) => {
@@ -42,11 +41,11 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
           return Promise.resolve();
 
         if (isStateManager) {
-          return managerApiRequest(
-            actionAPI[HIDEAWAY] as IHideawayActionContent<S>,
-            dispatch,
+          return managerApiRequest<S, DispatchExt>(
+            actionAPI[HIDEAWAY] as IHideawayActionContent<S, DispatchExt>,
             getState,
-            onError,
+            dispatch,
+            onErrorMiddleware,
             withExtraArgument,
           );
         }
@@ -59,7 +58,7 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
             throw response;
           })
           .then((body: S) => {
-            const response: IHideawayActionContent<S> = {
+            const response: IHideawayActionContent<S, DispatchExt> = {
               type,
               payload: body,
               ...(nested && { nested }),
@@ -68,15 +67,38 @@ export const hideaway = <S, DispatchExt>(options: IHideawayOptions = {}) => {
             dispatch(response);
             return Promise.resolve();
           })
-          .catch((reason: THideawayReason) => {
-            const response: IHideawayActionContent<THideawayReason> = {
+          .catch(async (errorData: THideawayReason) => {
+            let reason: THideawayReason = errorData;
+            if (reason.constructor.name === 'Response') {
+              reason = await (errorData as Response)
+                .json()
+                .then((body) => body);
+            }
+            const actionContent: IHideawayActionContent<
+              THideawayReason,
+              DispatchExt
+            > = {
               type,
               payload: reason,
               ...(nested && { nested }),
               ...(complement && { complement }),
             };
-            if (onError) {
-              onError(response);
+            if (onErrorMiddleware) {
+              onErrorMiddleware(
+                actionContent,
+                getState,
+                dispatch,
+                onErrorAction,
+                withExtraArgument,
+              );
+            } else if (onErrorAction) {
+              onErrorAction(
+                actionContent,
+                getState,
+                dispatch,
+                undefined,
+                withExtraArgument,
+              );
             }
             return Promise.resolve();
           });

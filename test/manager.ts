@@ -116,6 +116,12 @@ describe('manager -> generateStatusReducer', () => {
 });
 
 describe('utils -> removeState', () => {
+  it('should return the same value', () => {
+    // Undefined is normally use to test reducers
+    const result = removeState((undefined as unknown) as string);
+    expect(result).toEqual(undefined);
+  });
+
   it('should return the same text', () => {
     const text = 'MOCK';
     const result = removeState(text);

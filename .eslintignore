@@ -1,3 +1,4 @@
 jest.config.js
+package.json
 webpack.config.js
 examples/**

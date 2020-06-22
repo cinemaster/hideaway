@@ -96,6 +96,23 @@ describe('middleware -> core -> highaway', () => {
   });
 
   describe('Api without state manager', () => {
+    it('shoud call the error with the action payload in a response action', async () => {
+      const store = createMockStore();
+      class Response extends ResponseMock {} // Simulate Response class
+      const response = new Response({ ok: false, status: 404, body: 'error' });
+      const api = jest.fn();
+      api.mockReturnValue(Promise.resolve(response));
+      const onError = (action: IHideawayActionContent<THideawayReason>) => {
+        expect(action.type).toEqual(type);
+        expect(action.payload).toBe('"error"');
+      };
+      const action = generateAction(type, api, {
+        onError,
+        isStateManager: false,
+      });
+      await triggerAction(action, store);
+    });
+
     it('shoud call the error with the action payload with response', async () => {
       const responseSetting = { status: 404 };
       const store = createMockStore();
@@ -258,6 +275,19 @@ describe('middleware -> core -> highaway', () => {
     });
 
     it('shoud dispatch the action error with response', async () => {
+      const store = createMockStore();
+      class Response extends ResponseMock {} // Simulate Response class
+      const response = new Response({ ok: false, status: 404 });
+      const api = jest.fn();
+      api.mockReturnValue(Promise.reject(response));
+      const action = generateAction(type, api);
+      await triggerAction(action, store);
+      const result = _.last(store.dispatchList);
+      expect(result?.type).toEqual(`${type}_ERROR`);
+      expect(result?.payload).toBe('""');
+    });
+
+    it('shoud dispatch the action error in a response action', async () => {
       const responseSetting = { status: 404 };
       const store = createMockStore();
       const api = mockAPI(responseSetting);

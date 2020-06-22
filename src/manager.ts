@@ -17,6 +17,7 @@ import {
 import { combineShallow, compose, createReducer, isObject } from './utils';
 
 export const removeState = (type: string) => {
+  if (!type) return type;
   return type.replace(/_(REQUEST|RESPONSE|ERROR)$/g, '');
 };
 
@@ -85,13 +86,13 @@ export const generateStatusReducer = (
 };
 
 export const managerApiRequest = <S, DispatchExt>(
-  action: IHideawayActionContent<S>,
-  dispatch: THideawayDispatch<S, DispatchExt>,
+  action: IHideawayActionContent<S, DispatchExt>,
   getState: TFHideawayGetState<S>,
-  onError?: THideawayOnError,
+  dispatch: THideawayDispatch<S, DispatchExt>,
+  onErrorMiddleware?: THideawayOnError<S, DispatchExt>,
   withExtraArgument?: THideawayAnyObject,
 ) => {
-  const { type, api, nested, complement } = action;
+  const { type, api, nested, complement, onError: onErrorAction } = action;
 
   const request: IHideawayActionContent<S> = {
     type: `${type}_REQUEST`,
@@ -102,7 +103,11 @@ export const managerApiRequest = <S, DispatchExt>(
   // Inform the starting process
   dispatch(request);
 
-  return (api as TFHideawayApi)(dispatch, getState, withExtraArgument)
+  return (api as TFHideawayApi<S, DispatchExt>)(
+    dispatch,
+    getState,
+    withExtraArgument,
+  )
     .then((response: Response) => {
       if (response.ok) {
         return response.json();
@@ -119,16 +124,37 @@ export const managerApiRequest = <S, DispatchExt>(
       };
       dispatch(response);
     })
-    .catch((reason: THideawayReason) => {
-      const response: IHideawayActionContent<THideawayReason> = {
+    .catch(async (errorData: THideawayReason) => {
+      let reason: THideawayReason = errorData;
+      if (reason.constructor.name === 'Response') {
+        reason = await (errorData as Response).json().then((body) => body);
+      }
+      const actionContent: IHideawayActionContent<S, DispatchExt> = {
         type: `${type}_ERROR`,
-        payload: reason,
+        payload: (reason as unknown) as S,
         ...(nested && { nested }),
       };
-      const result = onError && onError(response);
-      if (result) {
-        response.payload = result;
+      let result: THideawayAny;
+      if (onErrorMiddleware) {
+        result = onErrorMiddleware(
+          actionContent,
+          getState,
+          dispatch,
+          onErrorAction,
+          withExtraArgument,
+        );
+      } else if (onErrorAction) {
+        result = onErrorAction(
+          actionContent,
+          getState,
+          dispatch,
+          undefined,
+          withExtraArgument,
+        );
       }
-      dispatch(response);
+      if (result) {
+        actionContent.payload = result;
+      }
+      dispatch(actionContent);
     });
 };
