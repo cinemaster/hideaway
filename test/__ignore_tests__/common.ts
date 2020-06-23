@@ -53,8 +53,12 @@ export class ResponseMock {
   }
 
   json: () => Promise<any> = () => {
-    const body = this.body || '';
-    return Promise.resolve(JSON.stringify(body));
+    const body = this.body || '""';
+    try {
+      return Promise.resolve(JSON.parse(body as string));
+    } catch {
+      return Promise.resolve(body);
+    }
   };
 
   text: () => Promise<string> = () => Promise.resolve(this.statusText);

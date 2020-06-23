@@ -27,6 +27,7 @@ export const hideaway = <S, DispatchExt = {}>(
       const {
         type,
         api,
+        apiPreReducer,
         predicate = () => true,
         nested,
         complement,
@@ -60,7 +61,7 @@ export const hideaway = <S, DispatchExt = {}>(
           .then((body: S) => {
             const response: IHideawayActionContent<S, DispatchExt> = {
               type,
-              payload: body,
+              payload: apiPreReducer ? apiPreReducer(body) : body,
               ...(nested && { nested }),
               ...(complement && { complement }),
             };
@@ -84,7 +85,7 @@ export const hideaway = <S, DispatchExt = {}>(
               ...(complement && { complement }),
             };
             if (onErrorMiddleware) {
-              onErrorMiddleware(
+              await onErrorMiddleware(
                 actionContent,
                 getState,
                 dispatch,
@@ -92,7 +93,7 @@ export const hideaway = <S, DispatchExt = {}>(
                 withExtraArgument,
               );
             } else if (onErrorAction) {
-              onErrorAction(
+              await onErrorAction(
                 actionContent,
                 getState,
                 dispatch,

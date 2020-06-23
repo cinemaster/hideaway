@@ -115,7 +115,7 @@ describe('manager -> generateStatusReducer', () => {
   });
 });
 
-describe('utils -> removeState', () => {
+describe('manager -> removeState', () => {
   it('should return the same value', () => {
     // Undefined is normally use to test reducers
     const result = removeState((undefined as unknown) as string);
@@ -138,7 +138,7 @@ describe('utils -> removeState', () => {
   });
 });
 
-describe('utils -> hasStateObject', () => {
+describe('manager -> hasStateObject', () => {
   it('should return false for value that is not an object', () => {
     expect(hasStateObject(1)).toBeFalsy();
   });
@@ -154,7 +154,7 @@ describe('utils -> hasStateObject', () => {
   });
 });
 
-describe('utils -> validateStateManager', () => {
+describe('maanger -> validateStateManager', () => {
   it('should return the state manager with the value', () => {
     const value = 1;
     expect(validateStateManager(value)).toStrictEqual({

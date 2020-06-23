@@ -92,7 +92,14 @@ export const managerApiRequest = <S, DispatchExt>(
   onErrorMiddleware?: THideawayOnError<S, DispatchExt>,
   withExtraArgument?: THideawayAnyObject,
 ) => {
-  const { type, api, nested, complement, onError: onErrorAction } = action;
+  const {
+    type,
+    api,
+    apiPreReducer,
+    nested,
+    complement,
+    onError: onErrorAction,
+  } = action;
 
   const request: IHideawayActionContent<S> = {
     type: `${type}_REQUEST`,
@@ -118,7 +125,7 @@ export const managerApiRequest = <S, DispatchExt>(
     .then((body: S) => {
       const response: IHideawayActionContent<S> = {
         type: `${type}_RESPONSE`,
-        payload: body,
+        payload: apiPreReducer ? apiPreReducer(body) : body,
         ...(nested && { nested }),
         ...(complement && { complement }),
       };
@@ -136,7 +143,7 @@ export const managerApiRequest = <S, DispatchExt>(
       };
       let result: THideawayAny;
       if (onErrorMiddleware) {
-        result = onErrorMiddleware(
+        result = await onErrorMiddleware(
           actionContent,
           getState,
           dispatch,
@@ -144,7 +151,7 @@ export const managerApiRequest = <S, DispatchExt>(
           withExtraArgument,
         );
       } else if (onErrorAction) {
-        result = onErrorAction(
+        result = await onErrorAction(
           actionContent,
           getState,
           dispatch,

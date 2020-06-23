@@ -103,4 +103,22 @@ describe('action -> generateApiAction', () => {
     });
     expect(result.payload).toStrictEqual(keys);
   });
+
+  it('should ignore the apiPreReducer without api', () => {
+    const apiPreReducer = () => 'mock';
+    const result = generateAction(type, undefined, {
+      keys,
+      apiPreReducer,
+    });
+    expect(result.apiPreReducer).toBeUndefined();
+  });
+
+  it('should send the apiPreReducer', () => {
+    const apiPreReducer = () => 'mock';
+    const result = generateAction(type, api, {
+      keys,
+      apiPreReducer,
+    });
+    expect(result[HIDEAWAY]?.apiPreReducer).toEqual(apiPreReducer);
+  });
 });

@@ -104,7 +104,7 @@ describe('middleware -> core -> highaway', () => {
       api.mockReturnValue(Promise.resolve(response));
       const onError = (action: IHideawayActionContent<THideawayReason>) => {
         expect(action.type).toEqual(type);
-        expect(action.payload).toBe('"error"');
+        expect(action.payload).toBe('error');
       };
       const action = generateAction(type, api, {
         onError,
@@ -177,7 +177,7 @@ describe('middleware -> core -> highaway', () => {
       const complement = 'complementMock';
       const expectAction: THideawayActionContent = {
         type,
-        payload: '""',
+        payload: '',
         complement,
       };
       const api = mockAPI();
@@ -202,7 +202,7 @@ describe('middleware -> core -> highaway', () => {
       const keys = { a: 1, b: 2 };
       const expectAction: THideawayActionContent = {
         type,
-        payload: '""',
+        payload: '',
         nested: {
           keys,
           path: [],
@@ -238,7 +238,7 @@ describe('middleware -> core -> highaway', () => {
 
     it('shoud send additional arguments (middleware)', async () => {
       const store = createMockStore();
-      const expectAction: THideawayActionContent = { type, payload: '""' };
+      const expectAction: THideawayActionContent = { type, payload: '' };
       const arg = { OK: 1 };
       const api: TFHideawayApi = (_dispatch, _getState, withExtraArgument) => {
         expect(withExtraArgument).toStrictEqual(arg);
@@ -247,6 +247,20 @@ describe('middleware -> core -> highaway', () => {
       const action = generateAction(type, api, { isStateManager: false });
       await triggerAction(action, store, { withExtraArgument: arg });
       expect(_.last(store.dispatchList)).toStrictEqual(expectAction);
+    });
+
+    it('shoud run the apiPreReducer', async () => {
+      const store = createMockStore();
+      const api = mockAPI();
+      const text = 'Mock';
+      const apiPreReducer = () => text;
+      const expectAction: THideawayActionContent = { type, payload: text };
+      const action = generateAction(type, api, {
+        isStateManager: false,
+        apiPreReducer,
+      });
+      await triggerAction(action, store);
+      expect(store.dispatchList[1]).toStrictEqual(expectAction);
     });
   });
 
@@ -266,7 +280,7 @@ describe('middleware -> core -> highaway', () => {
       const store = createMockStore();
       const expectAction: THideawayActionContent = {
         type: `${type}_RESPONSE`,
-        payload: '""',
+        payload: '',
       };
       const api = mockAPI();
       const action = generateAction(type, api);
@@ -284,7 +298,7 @@ describe('middleware -> core -> highaway', () => {
       await triggerAction(action, store);
       const result = _.last(store.dispatchList);
       expect(result?.type).toEqual(`${type}_ERROR`);
-      expect(result?.payload).toBe('""');
+      expect(result?.payload).toBe('');
     });
 
     it('shoud dispatch the action error in a response action', async () => {
@@ -344,7 +358,7 @@ describe('middleware -> core -> highaway', () => {
       const complement = 'complementMock';
       const expectAction: THideawayActionContent = {
         type: `${type}_RESPONSE`,
-        payload: '""',
+        payload: '',
         complement,
       };
       const api = mockAPI();
@@ -372,7 +386,7 @@ describe('middleware -> core -> highaway', () => {
       const keys = { a: 1, b: 2 };
       const expectAction: THideawayActionContent = {
         type: `${type}_RESPONSE`,
-        payload: '""',
+        payload: '',
         nested: {
           keys,
           path: [],
@@ -425,7 +439,7 @@ describe('middleware -> core -> highaway', () => {
       const store = createMockStore();
       const expectAction: THideawayActionContent = {
         type: `${type}_RESPONSE`,
-        payload: '""',
+        payload: '',
       };
       const arg = { OK: 1 };
       const api: TFHideawayApi = (_dispatch, _getState, withExtraArgument) => {
@@ -435,6 +449,20 @@ describe('middleware -> core -> highaway', () => {
       const action = generateAction(type, api);
       await triggerAction(action, store, { withExtraArgument: arg });
       expect(_.last(store.dispatchList)).toStrictEqual(expectAction);
+    });
+
+    it('shoud run the apiPreReducer', async () => {
+      const store = createMockStore();
+      const api = mockAPI();
+      const text = 'Mock';
+      const apiPreReducer = () => text;
+      const expectAction: THideawayActionContent = {
+        type: `${type}_RESPONSE`,
+        payload: text,
+      };
+      const action = generateAction(type, api, { apiPreReducer });
+      await triggerAction(action, store);
+      expect(store.dispatchList[2]).toStrictEqual(expectAction);
     });
   });
 });

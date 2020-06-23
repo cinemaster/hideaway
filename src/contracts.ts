@@ -32,13 +32,15 @@ export type TFHideawayApi<S = THideawayAnyObject, DispatchExt = {}> = (
   withExtraArgument?: THideawayAnyObject,
 ) => typeof Promise.prototype;
 
+export type TFHideawayApiPreReducer<S> = (body: S) => THideawayAny;
+
 export type THideawayOnError<S, DispatchExt = {}> = (
   actionContent: IHideawayActionContent<THideawayAny, DispatchExt>,
   getState: TFHideawayGetState<S>,
   dispatch: THideawayDispatch<S, DispatchExt>,
   onError?: THideawayOnError<S, DispatchExt>,
   withExtraArgument?: THideawayAnyObject,
-) => void;
+) => THideawayAny;
 
 export type TFHideawayCombineShallow = (
   reducers: IHideawayActionReducer<THideawayAny>,
@@ -89,6 +91,8 @@ export interface IHideawayStatusManager<R = THideawayAny, E = THideawayAny> {
  * @param {string} type is the action name.
  * @param {TFHideawayApi<S>} api is a function that returns a promise. The
  * function receive (dispatch, getState, extra) from the middleware.
+ * @param {TFHideawayApiPreReducer<S>} apiPreReducer receives the body after the
+ * api call and expect a result that will send to reducer.
  * @param {S} payload is the state expected to be used on reducer.
  * @param {IHideawayNestedProps} nested contains the keys and the path to update
  * the object.
@@ -103,6 +107,7 @@ export interface IHideawayStatusManager<R = THideawayAny, E = THideawayAny> {
  */
 export interface IHideawayActionContent<S, DispatchExt = {}> extends AnyAction {
   api?: TFHideawayApi<S, DispatchExt>;
+  apiPreReducer?: TFHideawayApiPreReducer<S>;
   payload?: S;
   nested?: IHideawayNestedProps;
   complement?: THideawayAny;
@@ -113,6 +118,8 @@ export interface IHideawayActionContent<S, DispatchExt = {}> extends AnyAction {
 }
 
 /**
+ * @param {TFHideawayApiPreReducer<S>} apiPreReducer receives the body after the
+ * api call and expect a result that will send to reducer.
  * @param {THideawayAnyObject} keys is used to generate the nest path; It can be
  * used for identification beyond the payload.
  * @param {string[]} path is used with keys to generate the nested path.
@@ -127,6 +134,7 @@ export interface IHideawayActionContent<S, DispatchExt = {}> extends AnyAction {
  * @param {S} payload is the state expected to be used on reducer.
  */
 export interface IHideawayActionOptions<S = THideawayAny> {
+  apiPreReducer?: TFHideawayApiPreReducer<S>;
   keys?: THideawayAnyObject;
   path?: string[];
   allObject?: boolean;

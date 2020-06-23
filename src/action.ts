@@ -20,6 +20,7 @@ export const generateAction = <S = THideawayAny>(
   options: IHideawayActionOptions<S> = {},
 ) => {
   const {
+    apiPreReducer,
     keys,
     path,
     complement,
@@ -29,8 +30,10 @@ export const generateAction = <S = THideawayAny>(
     isStateManager,
     payload,
   } = options;
+  const hasApi = api && typeof api === 'function';
   const action: IHideawayActionContent<S> = {
     type,
+    ...(hasApi && apiPreReducer && { apiPreReducer }),
     ...(predicate && { predicate }),
     ...(onError && { onError }),
     ...(complement && { complement }),
@@ -38,7 +41,7 @@ export const generateAction = <S = THideawayAny>(
     ...(isStateManager !== undefined && { isStateManager }),
     ...(payload && { payload }),
   };
-  if (api && typeof api === 'function') {
+  if (hasApi) {
     return { type, [HIDEAWAY]: { ...action, api } } as IHideawayAction<S>;
   }
   return action as IHideawayAction<S>;
