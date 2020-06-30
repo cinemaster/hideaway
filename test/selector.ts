@@ -2,15 +2,16 @@ import { IHideawaySelectorOptions } from '../src/contracts';
 import { getValue } from '../src/selector';
 
 describe('middleware -> action -> getValue', () => {
-  it('should return the state if does not set options', () => {
+  it('should return it own state', () => {
     const state = {
       mock: true,
     };
-    const result = getValue(state, { isStateManager: false });
+    const options: IHideawaySelectorOptions = { isStateManager: false };
+    const result = getValue(state, options);
     expect(result).toEqual(state);
   });
 
-  it('should return the default state if does not find the path', () => {
+  it('should return the defaultValue if does not find the path', () => {
     const state = {
       mock: true,
     };
@@ -24,13 +25,18 @@ describe('middleware -> action -> getValue', () => {
     expect(result).toEqual(defaultValue);
   });
 
-  it('should return it own state', () => {
+  it('should return the defaultValue for null value', () => {
     const state = {
-      mock: true,
+      mock: null,
     };
-    const options: IHideawaySelectorOptions = { isStateManager: false };
+    const defaultValue = 'default mock';
+    const options: IHideawaySelectorOptions = {
+      defaultValue,
+      path: ['mock'],
+      isStateManager: false,
+    };
     const result = getValue(state, options);
-    expect(result).toEqual(state);
+    expect(result).toEqual(defaultValue);
   });
 
   it('should return null if it does not have state and has path', () => {
@@ -151,7 +157,7 @@ describe('middleware -> action -> getValue', () => {
     expect(result).toBe('c');
   });
 
-  it('should return the mix with the nested and the state manager', () => {
+  it('should return the value for the nested and the state manager (without state manager on state)', () => {
     const state = {
       mock: {
         a: {
@@ -173,6 +179,74 @@ describe('middleware -> action -> getValue', () => {
       value: 'c',
       error: null,
       nested,
+    });
+  });
+
+  it('should return the value for the nested and the state manager', () => {
+    const nested = { keys: { A: 'a', B: 'b' }, path: ['A', 'B'] };
+    const state = {
+      mock: {
+        a: {
+          b: {
+            loading: true,
+            value: 'c',
+            error: null,
+            nested,
+          },
+        },
+      },
+    };
+    const defaultValue = 'default';
+    const options: IHideawaySelectorOptions = {
+      defaultValue,
+      path: ['mock'],
+      nested,
+      isStateManager: true,
+    };
+    const result = getValue(state, options);
+    expect(result).toStrictEqual({
+      loading: true,
+      value: 'c',
+      error: null,
+      nested,
+    });
+  });
+
+  it('should return the defaultValue if the value is null  (without state manager on state)', () => {
+    const state = { mock: null };
+    const defaultValue = 'default';
+    const options: IHideawaySelectorOptions = {
+      defaultValue,
+      path: ['mock'],
+      isStateManager: true,
+    };
+    const result = getValue(state, options);
+    expect(result).toStrictEqual({
+      loading: false,
+      value: defaultValue,
+      error: null,
+    });
+  });
+
+  it('should return the defaultValue if the value is null', () => {
+    const state = {
+      mock: {
+        loading: true,
+        value: null,
+        error: null,
+      },
+    };
+    const defaultValue = 'default';
+    const options: IHideawaySelectorOptions = {
+      defaultValue,
+      path: ['mock'],
+      isStateManager: true,
+    };
+    const result = getValue(state, options);
+    expect(result).toStrictEqual({
+      loading: true,
+      value: defaultValue,
+      error: null,
     });
   });
 

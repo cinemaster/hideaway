@@ -92,7 +92,7 @@ export interface IHideawayStatusManager<R = THideawayAny, E = THideawayAny> {
  * @param {TFHideawayApi<S>} api is a function that returns a promise. The
  * function receive (dispatch, getState, extra) from the middleware.
  * @param {TFHideawayApiPreReducer<S>} apiPreReducer receives the body after the
- * api call and expect a result that will send to reducer.
+ * api call and expect a result that will send to the reducer.
  * @param {S} payload is the state expected to be used on reducer.
  * @param {IHideawayNestedProps} nested contains the keys and the path to update
  * the object.
@@ -119,7 +119,7 @@ export interface IHideawayActionContent<S, DispatchExt = {}> extends AnyAction {
 
 /**
  * @param {TFHideawayApiPreReducer<S>} apiPreReducer receives the body after the
- * api call and expect a result that will send to reducer.
+ * api call and expect a result that will send to the reducer.
  * @param {THideawayAnyObject} keys is used to generate the nest path; It can be
  * used for identification beyond the payload.
  * @param {string[]} path is used with keys to generate the nested path.

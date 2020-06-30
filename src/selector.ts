@@ -23,7 +23,11 @@ export const getValue = <R = THideawayAny, S = THideawayAny>(
     result = getNestedValue(result, nested, defaultValue);
   }
   if (isStateManager) {
-    return validateStateManager(result, nested) as R;
+    const state = validateStateManager(result, nested);
+    return {
+      ...state,
+      value: state.value || defaultValue,
+    };
   }
   return result as R;
 };

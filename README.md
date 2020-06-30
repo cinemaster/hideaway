@@ -90,10 +90,10 @@ export const reducers = combineReducers({ counter: counterReducers });
 `selector.js`
 
 ```js
-import { generateSelector } from 'hideaway';
+import { getValue } from 'hideaway';
 
 export const getCounter = (state) => {
-  return generateSelector(state, {
+  return getValue(state, {
     path: ['counter'],
     isStateManager: false,
   });
@@ -136,10 +136,10 @@ export const reducers = combineReducers({ counter: counterReducers });
 `selector.js`
 
 ```js
-import { generateSelector } from 'hideaway';
+import { getValue } from 'hideaway';
 
 export const getCounter = (state) => {
-  return generateSelector(state, {
+  return getValue(state, {
     path: ['counter'],
   });
 };
@@ -190,6 +190,7 @@ Format the action to be readable to the hideaway.
 
 | parameter        | description                                                                                                                             |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `apiPreReducer`  | It receives the body after the api call and expect a result that will send to the reducer.                                              |
 | `keys`           | It is used to generate the nest path.                                                                                                   |
 | `path`           | It is used with keys to generate the nested path. If the keys match with an item inside the path, the value of the key will replace it. |
 | `allObject`      | It returns the object instead the value from the nested path.                                                                           |
@@ -240,6 +241,6 @@ Retrieve the value from state
 | parameter        | description                                                                     |
 | ---------------- | ------------------------------------------------------------------------------- |
 | `path`           | It is used to find the initial path. (nested path is the complement)            |
-| `defaultValue`   | Value to return if doesn't find the path. (default: undefined)                  |
+| `defaultValue`   | Value to return if doesn't find the path or the value is null. (default: null)  |
 | `nested`         | See [nested](#nested).                                                          |
 | `isStateManager` | Inform to return the loading, value and error when the result is empty or null. |

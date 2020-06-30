@@ -6,7 +6,7 @@ module.exports = {
   testMatch: ['<rootDir>/test/*.ts'],
   coverageThreshold: {
     global: {
-      branches: 99.52,
+      branches: 99.54,
       functions: 100,
       lines: 100,
     },
