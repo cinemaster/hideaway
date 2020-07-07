@@ -1,5 +1,5 @@
 import { pathOr } from 'ramda';
-import { IHideawaySelectorOptions, THideawayAny } from './contracts';
+import { TFGetValue } from './contracts';
 import { validateStateManager } from './manager';
 import { getNestedValue } from './nested';
 
@@ -8,10 +8,7 @@ import { getNestedValue } from './nested';
  * @param {S} state The state container
  * @param {IHideawaySelectorOptions} options are additional settings
  */
-export const getValue = <R = THideawayAny, S = THideawayAny>(
-  state: S,
-  options: IHideawaySelectorOptions = {},
-) => {
+export const getValue: TFGetValue = (state, options = {}) => {
   const {
     path = [],
     defaultValue = null,
@@ -29,5 +26,5 @@ export const getValue = <R = THideawayAny, S = THideawayAny>(
       value: state.value || defaultValue,
     };
   }
-  return result as R;
+  return result;
 };

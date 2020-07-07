@@ -212,3 +212,8 @@ export interface IThunk<R, S, DispatchExt = {}> {
 export interface IThunkDispatch<S, DispatchExt = {}> {
   <R>(thunk: IThunk<R, S, DispatchExt>): R;
 }
+
+export type TFGetValue = <R = THideawayAny, S = THideawayAny>(
+  state: S,
+  options?: IHideawaySelectorOptions,
+) => R;
