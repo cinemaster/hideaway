@@ -298,7 +298,7 @@ describe('middleware -> core -> highaway', () => {
       await triggerAction(action, store);
       const result = _.last(store.dispatchList);
       expect(result?.type).toEqual(`${type}_ERROR`);
-      expect(result?.payload).toBe('');
+      expect(result?.payload).toBe(response);
     });
 
     it('shoud dispatch the action error in a response action', async () => {
