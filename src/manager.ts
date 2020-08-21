@@ -131,11 +131,7 @@ export const managerApiRequest = <S, DispatchExt>(
       };
       dispatch(response);
     })
-    .catch(async (errorData: THideawayReason) => {
-      let reason: THideawayReason = errorData;
-      if (reason.constructor.name === 'Response') {
-        reason = await (errorData as Response).json().then((body) => body);
-      }
+    .catch(async (reason: THideawayReason) => {
       const actionContent: IHideawayActionContent<S, DispatchExt> = {
         type: `${type}_ERROR`,
         payload: (reason as unknown) as S,
