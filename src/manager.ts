@@ -3,7 +3,10 @@ import {
   IHideawayActionContent,
   IHideawayActionReducer,
   IHideawayNestedProps,
+  IHideawayStatusManager,
+  IHideawayStatusManagerOptions,
   IHideawayStatusReducer,
+  TFHideawayApi,
   TFHideawayGetState,
   TFHideawayReducer,
   THideawayAny,
@@ -12,7 +15,6 @@ import {
   THideawayNestedProps,
   THideawayOnError,
   THideawayReason,
-  TFHideawayApi,
 } from './contracts';
 import { combineShallow, compose, createReducer, isObject } from './utils';
 
@@ -29,6 +31,17 @@ export const hasStateObject = (value: THideawayAny) => {
   return ['loading', 'value', 'error'].every((key) => keyList.includes(key));
 };
 
+export const createStateManager = <R = THideawayAny, E = THideawayAny>(
+  values: IHideawayStatusManagerOptions<R, E>,
+) => {
+  return {
+    loading: false,
+    value: null,
+    error: null,
+    ...values,
+  } as IHideawayStatusManager<R, E>;
+};
+
 export const validateStateManager = (
   value: THideawayAny,
   nested?: IHideawayNestedProps,
@@ -36,18 +49,16 @@ export const validateStateManager = (
   if (hasStateObject(value)) {
     return value;
   }
-  return {
-    loading: false,
+  return createStateManager({
     value,
-    error: null,
     ...(nested && { nested }),
-  };
+  });
 };
 
 export const generateStatusReducer = (
   prefix: string,
   reducer: TFHideawayReducer,
-  isNested: boolean = false,
+  hasNested: boolean = false,
   displayError: boolean = false,
 ) => {
   const loadingReducer: IHideawayActionReducer<boolean> = {
@@ -80,7 +91,7 @@ export const generateStatusReducer = (
     loading: createReducer<boolean>(false, loadingReducer),
     value: compose(createReducer<THideawayAny>(null, valueReducer), identity),
     error: createReducer<THideawayAny>(null, errorReducer),
-    ...(isNested && { nested }),
+    ...(hasNested && { nested }),
   };
   return combineShallow(stateReducer);
 };

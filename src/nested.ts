@@ -66,10 +66,10 @@ export const reducerNested = <S>(
   action: IHideawayActionContent<S>,
   reducer: TFHideawayReducer<S>,
 ) => {
-  if (!action.nested || action.nested.allObject) {
+  const { nested } = action;
+  if (!nested) {
     return reducer(state, action);
   }
-  const { nested } = action;
   const currentState = getNestedValue<THideawayAny, S>(state, nested, null);
   const result = reducer(currentState, action);
   return generateNested(state, nested, result);

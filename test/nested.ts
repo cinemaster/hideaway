@@ -201,17 +201,12 @@ describe('nested -> reducerNested', () => {
   const obj = { a: true };
   const reducer = () => obj;
 
-  it('should return all object', () => {
-    const nested = {
-      keys: {},
-      path: [],
-      allObject: true,
-    } as IHideawayNestedProps;
-    const result = reducerNested(obj, { type: 'mock', nested }, reducer);
+  it('should return the value', () => {
+    const result = reducerNested(obj, { type: 'mock' }, reducer);
     expect(result).toBe(obj);
   });
 
-  it('should return the value', () => {
+  it('should return the value nested', () => {
     const nested = {
       keys: {},
       path: ['a'],

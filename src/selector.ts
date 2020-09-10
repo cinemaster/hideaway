@@ -24,6 +24,7 @@ export const getValue: TFGetValue = (state, options = {}) => {
     return {
       ...state,
       value: state.value || defaultValue,
+      nested: state.nested || { keys: {}, path: [], allObject: false },
     };
   }
   return result;

@@ -160,6 +160,46 @@ describe('utils -> combineShallow', () => {
     const result = reducer(state, { type: 'mock' });
     expect(result).toStrictEqual(expected);
   });
+
+  describe('allObject', () => {
+    it('should return the whole state', () => {
+      const reducers = {
+        value: (state: any) => state,
+      };
+      const expected = { value: 1 };
+      const state = { value: 1 };
+      const reducer = combineShallow(reducers);
+      const result = reducer(state, {
+        type: 'mock_RESPONSE',
+        nested: {
+          keys: { a: 2 },
+          path: ['a'],
+          allObject: true,
+        },
+      });
+      expect(result).toStrictEqual(expected);
+    });
+
+    it('should throw an error', () => {
+      const reducers = {
+        value: () => undefined,
+      };
+      const reducer = combineShallow(reducers);
+      const result = () =>
+        reducer(
+          {},
+          {
+            type: 'mock_RESPONSE',
+            nested: {
+              keys: { a: 2 },
+              path: ['a'],
+              allObject: true,
+            },
+          },
+        );
+      expect(result).toThrow('reducer "value" returned undefined');
+    });
+  });
 });
 
 describe('utils -> isObject', () => {

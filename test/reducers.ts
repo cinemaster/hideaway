@@ -1,6 +1,7 @@
 // @ts-nocheck
-import _ from 'lodash';
-import { generateStatusReducer } from '../src/manager';
+import { Reducer } from 'redux';
+import { IHideawayStatusManager } from '../src/contracts';
+import { generateStatusReducer, createStateManager } from '../src/manager';
 import { ReducerManagement } from '../src/reducer';
 import {
   hideConsoleError,
@@ -10,6 +11,7 @@ import {
 } from './__ignore_tests__/common';
 import { isObject } from '../src/utils';
 import { testReducer } from './__ignore_tests__/reducer';
+import isEmpty from 'lodash/isEmpty';
 
 describe('reducer -> ReducerManagement -> composeReducers', () => {
   const initialState = 'Initial state';
@@ -149,6 +151,48 @@ describe('reducer -> ReducerManagement -> composeReducers', () => {
         payload: value,
       });
       expect(result.a.value).toBe(value);
+    });
+
+    describe('With all object', () => {
+      const paramsWAO = { isStateManager, isNested };
+      const nestedWAO = { ...nested, allObject: true };
+      const expectState = createStateManager({ nested: nestedWAO });
+      const mockReducer = (state, { payload }) => {
+        expect(state).toStrictEqual({ a: expectState });
+        return payload;
+      };
+
+      it('should change the loading state', () => {
+        const manager = new ReducerManagement(paramsWAO);
+        manager.add('MOCK', mockReducer);
+        const action = { type: 'MOCK_REQUEST', nested: nestedWAO };
+        const result = manager.composeReducers()(undefined, action);
+        expect(result).toStrictEqual({ a: { ...expectState, loading: true } });
+      });
+
+      it('should change the error state', () => {
+        const manager = new ReducerManagement(paramsWAO);
+        manager.add('MOCK', mockReducer);
+        const action = {
+          type: 'MOCK_ERROR',
+          nested: nestedWAO,
+          payload: 'ERROR',
+        };
+        const result = manager.composeReducers()({ a: expectState }, action);
+        expect(result).toStrictEqual({ a: { ...expectState, error: 'ERROR' } });
+      });
+
+      it('should return the value from response changes', () => {
+        const manager = new ReducerManagement(paramsWAO);
+        manager.add('MOCK', mockReducer);
+        const action = {
+          type: 'MOCK_RESPONSE',
+          nested: nestedWAO,
+          payload: 'VALUE',
+        };
+        const result = manager.composeReducers()({ a: expectState }, action);
+        expect(result).toStrictEqual('VALUE');
+      });
     });
   });
 
@@ -547,6 +591,30 @@ describe('reducer -> ReducerManagement -> combine', () => {
   });
 });
 
+describe('reducer -> ReducerManagement -> combineOnly', () => {
+  const get: Reducer = (state) => state;
+
+  it('should combine without state manager validation', () => {
+    const expected = { MOCK: get };
+    const manager = new ReducerManagement({
+      isStateManager: true,
+      reducers: {},
+    });
+    manager.combineOnly({ MOCK: get });
+    expect(manager.reducers).toStrictEqual(expected);
+    expect(manager.reducers['MOCK'].name).toBe('get');
+  });
+
+  it('should combine with state manager validation', () => {
+    const manager = new ReducerManagement({
+      isStateManager: true,
+      reducers: {},
+    });
+    manager.combineOnly({ MOCK: get }, { ignoreCheck: false });
+    expect(manager.reducers['MOCK'].name).toBe('');
+  });
+});
+
 describe('reducer -> ReducerManagement -> add', () => {
   it('should add a simple action', () => {
     const action = 'MOCK';
@@ -568,6 +636,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
   describe('Without the nested and the state manager', () => {
     const isStateManager = false;
     const isNested = false;
+    const hasNested = false;
     const manager = new ReducerManagement();
 
     it('should return a string', () => {
@@ -576,6 +645,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         expected,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toBe(expected);
     });
@@ -586,6 +656,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         expected,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toBe(expected);
     });
@@ -596,6 +667,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         expected,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toBe(expected);
     });
@@ -606,6 +678,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         expected,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toBe(expected);
     });
@@ -616,6 +689,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         expected,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toBe(expected);
     });
@@ -626,6 +700,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         expected,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toBe(expected);
     });
@@ -636,6 +711,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         expected,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toBe(expected);
     });
@@ -644,13 +720,19 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
   describe('With the nested and the state manager', () => {
     const isStateManager = true;
     const isNested = true;
+    const hasNested = false;
     const manager = new ReducerManagement({
       isStateManager,
       isNested,
     });
 
     it('should return an empty object for undefined nested', () => {
-      const result = manager.createInitialState(null, isStateManager, isNested);
+      const result = manager.createInitialState(
+        null,
+        isStateManager,
+        isNested,
+        hasNested,
+      );
       expect(result).toStrictEqual({});
     });
 
@@ -661,6 +743,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -675,6 +758,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -689,6 +773,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -703,6 +788,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -717,6 +803,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -731,6 +818,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -745,6 +833,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -756,6 +845,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
   describe('State Manager', () => {
     const isStateManager = true;
     const isNested = false;
+    const hasNested = false;
     const manager = new ReducerManagement();
 
     it('should return a string', () => {
@@ -764,6 +854,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toStrictEqual({
         loading: false,
@@ -778,6 +869,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toStrictEqual({
         loading: false,
@@ -792,6 +884,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toStrictEqual({
         loading: false,
@@ -806,6 +899,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toStrictEqual({
         loading: false,
@@ -820,6 +914,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toStrictEqual({
         loading: false,
@@ -834,6 +929,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toStrictEqual({
         loading: false,
@@ -848,6 +944,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
       expect(result).toStrictEqual({
         loading: false,
@@ -860,6 +957,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
   describe('Nested', () => {
     const isStateManager = false;
     const isNested = true;
+    const hasNested = false;
     const manager = new ReducerManagement();
 
     it('should return an empty object for undefined nested', () => {
@@ -868,8 +966,9 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
       );
-      expect(_.isEmpty(result)).toBeTruthy();
+      expect(isEmpty(result)).toBeTruthy();
       expect(isObject(result)).toBeTruthy();
     });
 
@@ -880,6 +979,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -894,6 +994,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -908,6 +1009,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -922,6 +1024,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -936,6 +1039,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -950,6 +1054,7 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
@@ -964,11 +1069,31 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
         value,
         isStateManager,
         isNested,
+        hasNested,
         nested,
       );
       expect(result).toStrictEqual({
         mock: value,
       });
+    });
+  });
+
+  describe('hasNested', () => {
+    const isStateManager = true;
+    const isNested = false;
+    const hasNested = true;
+    const manager = new ReducerManagement();
+    const expected = { keys: {}, path: [], allObject: false };
+
+    it('should return an empty object for undefined nested', () => {
+      const value = null;
+      const result = manager.createInitialState(
+        value,
+        isStateManager,
+        isNested,
+        hasNested,
+      ) as IHideawayStatusManager;
+      expect(result.nested).toStrictEqual(expected);
     });
   });
 });

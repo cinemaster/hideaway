@@ -2,6 +2,12 @@ import { IHideawaySelectorOptions } from '../src/contracts';
 import { getValue } from '../src/selector';
 
 describe('middleware -> action -> getValue', () => {
+  const nested = {
+    allObject: false,
+    keys: {},
+    path: [],
+  };
+
   it('should return it own state', () => {
     const state = {
       mock: true,
@@ -225,6 +231,7 @@ describe('middleware -> action -> getValue', () => {
       loading: false,
       value: defaultValue,
       error: null,
+      nested,
     });
   });
 
@@ -247,6 +254,7 @@ describe('middleware -> action -> getValue', () => {
       loading: true,
       value: defaultValue,
       error: null,
+      nested,
     });
   });
 
@@ -256,6 +264,7 @@ describe('middleware -> action -> getValue', () => {
       loading: false,
       value: null,
       error: null,
+      nested,
     });
   });
 });

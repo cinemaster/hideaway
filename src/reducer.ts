@@ -2,12 +2,12 @@ import _ from 'lodash';
 import {
   IHideawayActionContent,
   IHideawayActionReducer,
+  IHideawayCombineOptions,
   IHideawayNestedProps,
   IHideawayReducerOptions,
   TFHideawayReducer,
   THideawayAny,
   TStateOrNull,
-  IHideawayStatusManager,
 } from './contracts';
 import {
   generateStatusReducer,
@@ -25,6 +25,8 @@ import { generateNested, reducerNested } from './nested';
  * doesn't set the nested, it will assing to a root key
  * @param {IHideawayNestedProps} nested Settings necessary if it sets isNested
  * @param {boolean} isNested It enables nested path
+ * @param {boolean} hasNested It doens't enable the nested path but store it
+ * with the state.
  * @param {boolean} isStateManager It enables the state manager for API use
  * @param {IHideawayActionReducer} reducers The object contains the action
  * name as a key and the reducer as value.
@@ -38,6 +40,8 @@ export class ReducerManagement<S> {
 
   isNested: boolean;
 
+  hasNested: boolean;
+
   isStateManager: boolean;
 
   reducers: IHideawayActionReducer<S>;
@@ -48,18 +52,21 @@ export class ReducerManagement<S> {
       // initialState forces null because state doesn't allow undefined
       initialState = null,
       isNested = false,
+      hasNested = false,
       isStateManager = true,
       nested,
       reducers = {},
     } = props;
     this.displayError = displayError;
+    this.isNested = isNested;
+    this.hasNested = hasNested || isNested;
     this.initialState = this.createInitialState(
       initialState,
       isStateManager,
       isNested,
+      hasNested,
       nested,
     );
-    this.isNested = isNested;
     this.nested = nested;
     this.isStateManager = isStateManager;
     this.reducers = {};
@@ -70,11 +77,15 @@ export class ReducerManagement<S> {
     value: TStateOrNull<S>,
     isStateManager: boolean,
     isNested: boolean,
+    hasNested: boolean,
     nested?: IHideawayNestedProps,
   ) => {
     let result = value as THideawayAny;
     if (isStateManager) {
       result = validateStateManager(value, nested);
+      if (hasNested) {
+        result.nested = { keys: {}, path: [], allObject: false };
+      }
     }
     if (isNested) {
       if (
@@ -102,17 +113,27 @@ export class ReducerManagement<S> {
       currentReducer = generateStatusReducer(
         name,
         reducer,
-        this.isNested,
+        this.hasNested,
         this.displayError,
       );
     }
     this.reducers[name] = currentReducer;
   };
 
-  private composeReducers = () => (
-    state: S,
-    action: IHideawayActionContent<S>,
-  ) => {
+  /**
+   * Add the reducer without state manager check.
+   *
+   * @param {string} name It is the action name
+   * @param {TFHideawayReducer} reducer The reducer
+   */
+  addWithoutStateCheck = (name: string, reducer: TFHideawayReducer<S>) => {
+    this.reducers[name] = reducer;
+  };
+
+  /**
+   * Compose all the reducers registered
+   */
+  composeReducers = () => (state: S, action: IHideawayActionContent<S>) => {
     // State can be undefined (reducer doesn't accept)
     const currentState = state === undefined ? this.initialState : state;
     const { type, nested } = action;
@@ -126,34 +147,58 @@ export class ReducerManagement<S> {
         console.warn('The nested attributes are missing');
         return currentState;
       }
-      let currentValue = currentState;
       const reducer = typeMatched
         ? this.reducers[type]
         : this.reducers[typeWithoutState];
-      if (this.isNested && action.nested) {
-        // Enable to reset the object
-        const isStateWithAllObject =
-          this.isStateManager && action.nested.allObject;
-        const result = reducerNested(currentState, action, reducer);
-        currentValue = isStateWithAllObject
-          ? ((result as unknown) as IHideawayStatusManager).value
-          : result;
-      } else {
-        currentValue = reducer(currentState, action);
+      if (
+        nested &&
+        nested.allObject &&
+        ((this.isStateManager && type.endsWith('_RESPONSE')) ||
+          !this.isStateManager)
+      ) {
+        return reducer(currentState, action);
       }
-      return currentValue;
+      if (this.isNested && action.nested) {
+        return reducerNested(currentState, action, reducer);
+      }
+      return reducer(currentState, action);
     }
     return currentState;
   };
 
   /**
-   * Combine the reducers.
-   *
+   * Combine the reducers only.
+   * By default it will NOT check if status manager is true.
    * @param {IHideawayActionReducer} reducers The object contains the action
    * name as a key and the reducer as value.
+   * @param {IHideawayCombineOptions} options
    */
-  combine = (reducers?: IHideawayActionReducer<S>) => {
-    _.forEach(reducers, (reducer, name) => this.add(name, reducer));
+  combineOnly = (
+    reducers: IHideawayActionReducer<S>,
+    options: IHideawayCombineOptions = { ignoreCheck: true },
+  ) => {
+    const { ignoreCheck } = options;
+    if (ignoreCheck) {
+      _.forEach(reducers, (reducer, name) =>
+        this.addWithoutStateCheck(name, reducer),
+      );
+    } else {
+      _.forEach(reducers, (reducer, name) => this.add(name, reducer));
+    }
+  };
+
+  /**
+   * Combine the reducers.
+   * By default it will check if status manager is true.
+   * @param {IHideawayActionReducer} reducers The object contains the action
+   * name as a key and the reducer as value.
+   * @param {IHideawayCombineOptions} options
+   */
+  combine = (
+    reducers: IHideawayActionReducer<S>,
+    options: IHideawayCombineOptions = { ignoreCheck: false },
+  ) => {
+    this.combineOnly(reducers, options);
     return this.composeReducers();
   };
 }

@@ -56,6 +56,19 @@ export const combineShallow: TFHideawayCombineShallow = (reducers) => (
   action,
 ) => {
   const nextState: THideawayAnyObject = {};
+  const { type, nested } = action;
+  const hasAllObject = (nested && nested.allObject) || false;
+
+  if (hasAllObject && type.endsWith('_RESPONSE')) {
+    const reducer = reducers['value'];
+    const valueState = reducer(state, action);
+    if (typeof valueState === 'undefined') {
+      const errorMessage = getUndefinedStateErrorMessage('value', action);
+      throw new Error(errorMessage);
+    }
+    return valueState;
+  }
+
   Object.keys(reducers).map((key: string) => {
     const reducer = reducers[key];
     const previousStateForKey = isObject(state) ? state[key] : undefined;

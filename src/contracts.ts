@@ -84,6 +84,17 @@ export interface IHideawayStatusManager<R = THideawayAny, E = THideawayAny> {
   loading: boolean;
   value: R;
   error: E;
+  nested?: IHideawayNestedProps;
+}
+
+export interface IHideawayStatusManagerOptions<
+  R = THideawayAny,
+  E = THideawayAny
+> {
+  loading?: boolean;
+  value?: R;
+  error?: E;
+  nested?: IHideawayNestedProps;
 }
 
 /**
@@ -153,6 +164,8 @@ export interface IHideawayActionOptions<S = THideawayAny> {
  * @param isStateManager change the state to use loading, value, and error.
  * @param isNested enable the state to store a nested path. Required nested
  * attribute.
+ * @param hasNested It doens't enable the nested path but store it with the
+ * state.
  * @param {IHideawayNestedProps} nested contains the keys and the path to update
  * the object.
  * @param displayError display a console error if failed to fetch.
@@ -162,6 +175,7 @@ export interface IHideawayReducerOptions<S> {
   initialState?: S | null;
   nested?: IHideawayNestedProps;
   isNested?: boolean;
+  hasNested?: boolean;
   isStateManager?: boolean;
   reducers?: IHideawayActionReducer<S>;
 }
@@ -195,6 +209,10 @@ export interface IHideawayNestedProps {
   keys: THideawayAnyObject;
   path: string[];
   allObject?: boolean;
+}
+
+export interface IHideawayCombineOptions {
+  ignoreCheck: boolean;
 }
 
 // ******* THUNK *******
