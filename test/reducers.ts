@@ -12,6 +12,7 @@ import {
 import { isObject } from '../src/utils';
 import { testReducer } from './__ignore_tests__/reducer';
 import isEmpty from 'lodash/isEmpty';
+import { generateAction } from '../src/action';
 
 describe('reducer -> ReducerManagement -> composeReducers', () => {
   const initialState = 'Initial state';
@@ -512,6 +513,24 @@ describe('reducer -> ReducerManagement -> composeReducers', () => {
         payload: value,
       });
       expect(result.a).toBe(value);
+    });
+
+    it('should convert number keys to string (from second level)', () => {
+      const ACTION_TYPE = 'MOCK';
+      const manager = new ReducerManagement({
+        isNested: true,
+        isStateManager: false,
+        reducers: { [ACTION_TYPE]: (_state, { payload }) => payload },
+      });
+      const result = manager.combine({})(
+        {},
+        generateAction(ACTION_TYPE, undefined, {
+          path: ['firstLevel', 'secondLevel'],
+          keys: { firstLevel: '123', secondLevel: '123' },
+          payload: 'value',
+        }),
+      );
+      expect(result).toStrictEqual({ '123': { '123': 'value' } });
     });
   });
 });

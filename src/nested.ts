@@ -57,7 +57,7 @@ export const generateNested = <S>(
   }
   if (path.length === 0) return ({ root: value } as unknown) as S;
   const currentPath = generatePath(nested);
-  _.set((currentState as unknown) as object, currentPath, value);
+  _.setWith((currentState as unknown) as object, currentPath, value, Object);
   return currentState;
 };
 
