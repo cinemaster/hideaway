@@ -1,12 +1,12 @@
 import { combineReducers } from 'redux';
-import { ReducerManagement } from 'hideaway';
+import { ReducerStateManagement } from 'hideaway';
 
-const titlesManagement = new ReducerManagement({
+const titlesManagement = new ReducerStateManagement({
   initialState: null,
 });
 
 const titlesReducers = titlesManagement.combine({
-  REQUEST_LIST: (state, { payload }) =>
+  REQUEST_LIST: (_state, { payload }) =>
     payload.map((item) => `${item.title} (${item.release_date})`),
   CLEAN_LIST: () => null,
 });

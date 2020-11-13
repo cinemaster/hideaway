@@ -1,9 +1,8 @@
-import { combineReducers } from "redux";
-import { ReducerManagement } from "hideaway";
+import { combineReducers } from 'redux';
+import { ReducerManagement } from 'hideaway';
 
 const reducerManagement = new ReducerManagement({
   initialState: 0,
-  isStateManager: false,
 });
 
 const counterReducers = reducerManagement.combine({

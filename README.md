@@ -76,7 +76,6 @@ import { ReducerManagement } from 'hideaway';
 
 const reducerManagement = new ReducerManagement({
   initialState: 0,
-  isStateManager: false,
 });
 
 const counterReducers = reducerManagement.combine({
@@ -95,14 +94,11 @@ import { getValue } from 'hideaway';
 export const getCounter = (state) => {
   return getValue(state, {
     path: ['counter'],
-    isStateManager: false,
   });
 };
 ```
 
 #### API (use of redux-thunk)
-
-By default, the state manager is active to be used with API
 
 `action.js`
 
@@ -110,7 +106,7 @@ By default, the state manager is active to be used with API
 import { generateAction } from 'hideaway';
 
 export const getScore = () =>
-  generateAction('FETCH_SCORE', () => fetch('http://<HOST>'));
+  generateStateManagerAction('FETCH_SCORE', () => fetch('http://<HOST>'));
 
 // ...
 ```
@@ -123,6 +119,7 @@ import { ReducerManagement } from 'hideaway';
 
 const reducerManagement = new ReducerManagement({
   initialState: 0,
+  isStateManager: true,
 });
 
 const counterReducers = reducerManagement.combine({
@@ -136,10 +133,10 @@ export const reducers = combineReducers({ counter: counterReducers });
 `selector.js`
 
 ```js
-import { getValue } from 'hideaway';
+import { getState } from 'hideaway';
 
 export const getCounter = (state) => {
-  return getValue(state, {
+  return getState(state, {
     path: ['counter'],
   });
 };
@@ -197,11 +194,43 @@ Format the action to be readable to the hideaway.
 | `complement`     | A complement for the action, to be used inside the reducer.                                                                             |
 | `predicate`      | Skip the fetch if predicate is false.                                                                                                   |
 | `onError`        | It calls when an error on API occurs. It receives the action with the response inside the payload.                                      |
-| `isStateManager` | Define how to handle the api request. The default is true (It handles REQUEST, RESPONSE, ERROR).                                        |
+| `isStateManager` | Define how to handle the api request. The default is false (It handles REQUEST, RESPONSE, ERROR).                                        |
 
 ```js
 export const fetchUser = (id) =>
   generateAction('FETCH_USER', (dispatch, getState, extraArg) => {
+    // API call
+  }, {
+    // options here
+  }));
+```
+
+### `generateStateManagerAction`
+
+Format the action to be readable to the hideaway and request to use the state manager feature.
+
+| parameter | description                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| `type`    | Property that indicates the type of action being performed                                             |
+| `api`     | Function that returns a promise. The function receive (dispatch, getState, extra) from the middleware. |
+| `options` | Additional settings (see the attributes below)                                                         |
+
+#### options
+
+| parameter        | description                                                                                                                             |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `apiPreReducer`  | It receives the body after the api call and expect a result that will send to the reducer.                                              |
+| `keys`           | It is used to generate the nest path.                                                                                                   |
+| `path`           | It is used with keys to generate the nested path. If the keys match with an item inside the path, the value of the key will replace it. |
+| `allObject`      | It returns the object instead the value from the nested path.                                                                           |
+| `complement`     | A complement for the action, to be used inside the reducer.                                                                             |
+| `predicate`      | Skip the fetch if predicate is false.                                                                                                   |
+| `onError`        | It calls when an error on API occurs. It receives the action with the response inside the payload.                                      |
+| `isStateManager` | Define how to handle the api request. The default is true (It handles REQUEST, RESPONSE, ERROR).                                        |
+
+```js
+export const fetchUser = (id) =>
+  generateStateManagerAction('FETCH_USER', (dispatch, getState, extraArg) => {
     // API call
   }, {
     // options here
@@ -216,7 +245,7 @@ export const fetchUser = (id) =>
 | `displayError`   | It display the error on console if the fetch fails.                                                         |
 | `isNested`       | It enables nested path. (Default: false)                                                                    |
 | `nested`         | Settings necessary if it sets isNested. (\*)                                                                |
-| `isStateManager` | It enables the state manager for API use.                                                                   |
+| `isStateManager` | It enables the state manager for API use. (default: false)                                                                   |
 
 (\*) The setting will use with `initialState` for the fist time only.
 
@@ -226,6 +255,27 @@ export const fetchUser = (id) =>
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `keys`    | It is used to generate the nest path.                                                                                                   |
 | `path`    | It is used with keys to generate the nested path. If the keys match with an item inside the path, the value of the key will replace it. |
+
+
+### `ReducerStateManagement`
+
+| parameter        | description                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| `initialState`   | Sset an initial state for the reducer. For nested that doesn't set the nested, it will assing to a root key |
+| `displayError`   | It display the error on console if the fetch fails.                                                         |
+| `isNested`       | It enables nested path. (Default: false)                                                                    |
+| `nested`         | Settings necessary if it sets isNested. (\*)                                                                |
+| `isStateManager` | It enables the state manager for API use. (default: true)                                                                  |
+
+(\*) The setting will use with `initialState` for the fist time only.
+
+#### nested
+
+| parameter | description                                                                                                                             |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `keys`    | It is used to generate the nest path.                                                                                                   |
+| `path`    | It is used with keys to generate the nested path. If the keys match with an item inside the path, the value of the key will replace it. |
+
 
 ### `getValue`
 
@@ -243,4 +293,22 @@ Retrieve the value from state
 | `path`           | It is used to find the initial path. (nested path is the complement)            |
 | `defaultValue`   | Value to return if doesn't find the path or the value is null. (default: null)  |
 | `nested`         | See [nested](#nested).                                                          |
-| `isStateManager` | Inform to return the loading, value and error when the result is empty or null. |
+| `isStateManager` | Inform to return the loading, value and error when the result is empty or null. (default: false) |
+
+### `getState`
+
+Retrieve the value from state using the state manager format
+
+| parameter | description                                    |
+| --------- | ---------------------------------------------- |
+| `state`   | The state container                            |
+| `options` | Additional settings (see the attributes below) |
+
+#### options
+
+| parameter        | description                                                                     |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `path`           | It is used to find the initial path. (nested path is the complement)            |
+| `defaultValue`   | Value to return if doesn't find the path or the value is null. (default: null)  |
+| `nested`         | See [nested](#nested).                                                          |
+| `isStateManager` | Inform to return the loading, value and error when the result is empty or null. (default: true)|

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { Display } from './components/Display';
-import { getListState } from './controllers/selectors';
-import { Store } from './components/Store';
+import { getBooks } from './controllers/selectors';
+import { Books } from './components/Books';
 import { updateBooksAction, resetBooksAction } from './controllers/actions';
 
-function App({ updateBooks, resetBooks, state }) {
+function App({ updateBooks, resetBooks, books }) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [message, setMessage] = useState('');
@@ -51,7 +51,7 @@ function App({ updateBooks, resetBooks, state }) {
           />
         </div>
         <div styles={{ display: 'table-cell' }}>
-          <Store state={state} />
+          <Books value={books} />
         </div>
       </div>
     </div>
@@ -59,8 +59,8 @@ function App({ updateBooks, resetBooks, state }) {
 }
 
 const mapStateToProps = (state) => {
-  const listState = getListState(state);
-  return { isLoading: listState.loading, data: listState.value, state };
+  const books = getBooks(state);
+  return { books };
 };
 
 const mapDispatchToProps = {

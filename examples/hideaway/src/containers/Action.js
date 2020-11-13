@@ -18,7 +18,7 @@ export const ActionComponent = ({
   const [imgUrl, setImgUrl] = useState('');
 
   const handleChangeInput = (event) => {
-    let value = parseInt(event.currentTarget.value.trim()) || 0;
+    let value = parseInt(event.currentTarget.value.trim(), 10) || 0;
     if (value <= 0 || value >= 1000) {
       value = value % 1000;
     }

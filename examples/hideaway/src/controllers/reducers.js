@@ -1,12 +1,12 @@
 import { combineReducers } from 'redux';
-import { ReducerManagement } from 'hideaway';
+import { ReducerStateManagement } from 'hideaway';
 
-const mixManagement = new ReducerManagement({
+const mixManagement = new ReducerStateManagement({
   isNested: true,
 });
 
 const mixReducers = mixManagement.combine({
-  REQUEST_LIST: (state, action) => ({
+  REQUEST_LIST: (_state, action) => ({
     title: action.payload.title,
     url: action.payload.img,
     response: action,

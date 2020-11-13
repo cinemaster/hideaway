@@ -1,7 +1,7 @@
 import { getValue } from 'hideaway';
 
-export const getListState = (state) => {
+export const getBooks = (state) => {
   return getValue(state, {
-    path: ['books'],
+    path: ['nested'],
   });
 };

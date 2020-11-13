@@ -1,24 +1,31 @@
-import { getValue } from 'hideaway';
+import { getState, getValue } from 'hideaway';
 
 export const getUrl = (state, comicId) => {
-  // Alternative to get the result
-  return getValue(state, {
+  const result = getState(state, {
     path: ['hideaway'],
     nested: {
       keys: { comicId: `comic-${comicId}` },
-      path: ['page', 'comicId', 'value', 'url'],
+      path: ['page', 'comicId'],
     },
-    isStateManager: false,
   });
+  return result.value.url;
+  // Alternative to get the result
+  // return getValue(state, {
+  //   path: ['hideaway'],
+  //   nested: {
+  //     keys: { comicId: `comic-${comicId}` },
+  //     path: ['page', 'comicId', 'value', 'url'],
+  //   },
+  // });
   //
   // OR
   //
-  // const value = getValue(state, {
+  // const result = getValue(state, {
   //   path: ['hideaway'],
   //   nested: {
   //     keys: { comicId: `comic-${comicId}` },
   //     path: ['page', 'comicId'],
   //   },
-  // }).value;
-  // return value ? value.url : null;
+  // });
+  // return result.value.url;
 };

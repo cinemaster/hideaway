@@ -8,6 +8,5 @@ export const getUrl = (state, comicId) => {
       keys: { comicId: `comic-${comicId}` },
       path: ['page', 'comicId', 'url'],
     },
-    isStateManager: false,
   });
 };

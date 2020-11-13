@@ -82,3 +82,8 @@ export const combineShallow: TFHideawayCombineShallow = (reducers) => (
   });
   return nextState;
 };
+
+export const version = () => {
+  const { version } = require('../package.json');
+  return version;
+};

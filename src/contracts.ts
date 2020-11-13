@@ -235,3 +235,8 @@ export type TFGetValue = <R = THideawayAny, S = THideawayAny>(
   state: S,
   options?: IHideawaySelectorOptions,
 ) => R;
+
+export type TFGetState = <R = THideawayAny, S = THideawayAny>(
+  state: S,
+  options?: IHideawaySelectorOptions,
+) => IHideawayStatusManager<R>;

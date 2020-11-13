@@ -13,7 +13,7 @@ export type TTestState = THideawayAny;
 export type THideawayActionContent = IHideawayActionContent<TTestState>;
 
 export interface ResponseProps {
-  headers?: object;
+  headers?: Headers;
   ok?: boolean;
   redirected?: boolean;
   status?: number;
@@ -30,7 +30,7 @@ export interface MockStore extends Store {
 }
 
 export class ResponseMock {
-  headers: object;
+  headers: Headers;
   ok: boolean;
   redirected: boolean;
   status: number;
@@ -41,14 +41,17 @@ export class ResponseMock {
   bodyUsed: boolean;
 
   constructor(props: ResponseProps = {}) {
-    this.headers = props.headers || {};
+    this.headers = new Headers(props.headers);
     this.status = props.status || 200;
     this.ok = props.ok || this.status === 200;
     this.redirected = props.redirected || this.status === 302;
     this.statusText = props.statusText || 'OK';
     this.type = props.type || 'basic';
     this.url = props.url || 'http://localhost';
-    this.body = props.body;
+    this.body =
+      typeof props.body === 'string'
+        ? props.body
+        : (JSON.stringify(props.body) as any) || '';
     this.bodyUsed = props.bodyUsed || this.body !== null;
   }
 
@@ -61,7 +64,8 @@ export class ResponseMock {
     }
   };
 
-  text: () => Promise<string> = () => Promise.resolve(this.statusText);
+  text: () => Promise<string> = () =>
+    Promise.resolve(((this.body as unknown) as string) || '');
 }
 
 export const mockAPI = (obj?: ResponseProps) => {

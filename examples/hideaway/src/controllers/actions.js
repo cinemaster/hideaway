@@ -1,7 +1,7 @@
-import { generateAction } from 'hideaway';
+import { generateAction, generateStateManagerAction } from 'hideaway';
 
 export const fetchListAction = (comicId) =>
-  generateAction(
+  generateStateManagerAction(
     'REQUEST_LIST',
     () =>
       fetch(
@@ -14,7 +14,7 @@ export const fetchListAction = (comicId) =>
   );
 
 export const fetchErrorAction = (comicId) =>
-  generateAction('REQUEST_LIST', () => fetch('https://wrong'), {
+  generateStateManagerAction('REQUEST_LIST', () => fetch('https://wrong'), {
     keys: { comicId: `comic-${comicId}` },
     path: ['page', 'comicId'],
   });

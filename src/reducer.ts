@@ -53,7 +53,7 @@ export class ReducerManagement<S> {
       initialState = null,
       isNested = false,
       hasNested = false,
-      isStateManager = true,
+      isStateManager = false,
       nested,
       reducers = {},
     } = props;
@@ -201,4 +201,10 @@ export class ReducerManagement<S> {
     this.combineOnly(reducers, options);
     return this.composeReducers();
   };
+}
+
+export class ReducerStateManagement<S> extends ReducerManagement<S> {
+  constructor(props: IHideawayReducerOptions<S> = {}) {
+    super({ isStateManager: true, ...props });
+  }
 }

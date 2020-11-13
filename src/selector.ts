@@ -1,5 +1,5 @@
 import { pathOr } from 'ramda';
-import { TFGetValue } from './contracts';
+import { TFGetState, TFGetValue } from './contracts';
 import { validateStateManager } from './manager';
 import { getNestedValue } from './nested';
 
@@ -13,7 +13,7 @@ export const getValue: TFGetValue = (state, options = {}) => {
     path = [],
     defaultValue = null,
     nested,
-    isStateManager = true,
+    isStateManager = false,
   } = options;
   let result = pathOr(defaultValue, path, state);
   if (nested) {
@@ -28,4 +28,13 @@ export const getValue: TFGetValue = (state, options = {}) => {
     };
   }
   return result;
+};
+
+/**
+ * Retrieve the value from state using state manager
+ * @param {S} state The state container
+ * @param {IHideawaySelectorOptions} options are additional settings
+ */
+export const getState: TFGetState = (state, options = {}) => {
+  return getValue(state, { isStateManager: true, ...options });
 };

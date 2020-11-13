@@ -10,7 +10,6 @@ export const fetchListAction = (comicId) =>
     {
       keys: { comicId: `comic-${comicId}` },
       path: ['page', 'comicId'],
-      isStateManager: false,
     },
   );
 
@@ -18,7 +17,6 @@ export const fetchErrorAction = (comicId) =>
   generateAction('REQUEST_LIST', () => fetch('https://wrong'), {
     keys: { comicId: `comic-${comicId}` },
     path: ['page', 'comicId'],
-    isStateManager: false,
     onError: () =>
       alert('The only way to handle the error without state manager'),
   });

@@ -3,6 +3,7 @@ import {
   compose,
   getUndefinedStateErrorMessage,
   combineShallow,
+  version,
 } from '../src/utils';
 import { testReducer } from './__ignore_tests__/reducer';
 import { identity } from 'ramda';
@@ -233,5 +234,12 @@ describe('utils -> isObject', () => {
 
   it('should return true for object', () => {
     expect(isObject({ '1': 1 })).toBeTruthy();
+  });
+});
+
+describe('utils -> version', () => {
+  it('should return the version', () => {
+    const { version: currVersion } = require('../package.json');
+    expect(version()).toBe(currVersion);
   });
 });

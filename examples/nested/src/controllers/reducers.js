@@ -2,7 +2,6 @@ import { combineReducers } from 'redux';
 import { ReducerManagement } from 'hideaway';
 
 const booksManagement = new ReducerManagement({
-  isStateManager: false, // By default it is true
   isNested: true,
 });
 
@@ -12,5 +11,5 @@ const booksReducers = booksManagement.combine({
 });
 
 export const reducers = combineReducers({
-  books: booksReducers,
+  nested: booksReducers,
 });

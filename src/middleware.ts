@@ -32,7 +32,7 @@ export const hideaway = <S, DispatchExt = {}>(
         nested,
         complement,
         onError: onErrorAction,
-        isStateManager = true,
+        isStateManager = false,
       } = actionAPI[HIDEAWAY] as IHideawayActionContent<S, DispatchExt>;
       const middleawareProcess: IThunk<Promise<void>, S, DispatchExt> = (
         dispatch,
@@ -53,7 +53,11 @@ export const hideaway = <S, DispatchExt = {}>(
         return api(dispatch, getState, withExtraArgument)
           .then((response: Response) => {
             if (response.ok) {
-              return response.json();
+              const contentType = response.headers.get('content-type');
+              return contentType &&
+                contentType.indexOf('application/json') !== -1
+                ? response.json()
+                : response.text();
             }
             // Any status code
             throw response;

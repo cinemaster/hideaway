@@ -2,7 +2,7 @@
 import { Reducer } from 'redux';
 import { IHideawayStatusManager } from '../src/contracts';
 import { generateStatusReducer, createStateManager } from '../src/manager';
-import { ReducerManagement } from '../src/reducer';
+import { ReducerManagement, ReducerStateManagement } from '../src/reducer';
 import {
   hideConsoleError,
   restoreConsoleError,
@@ -286,8 +286,10 @@ describe('reducer -> ReducerManagement -> composeReducers', () => {
   });
 
   describe('State Manager', () => {
+    const isStateManager = true;
     const params = {
       initialState,
+      isStateManager,
       reducers: { MOCK: (_state, { payload }) => payload },
     };
     const action = { type: 'MOCK_RESPONSE' };
@@ -644,7 +646,7 @@ describe('reducer -> ReducerManagement -> add', () => {
 
   it('should add a state manager action', () => {
     const action = 'MOCK';
-    const manager = new ReducerManagement();
+    const manager = new ReducerManagement({ isStateManager: true });
     const expected = generateStatusReducer(action, testReducer);
     manager.add(action, testReducer);
     expect(manager.reducers[action].toString()).toBe(expected.toString());
@@ -1114,5 +1116,17 @@ describe('reducer -> ReducerManagement -> createInitialState', () => {
       ) as IHideawayStatusManager;
       expect(result.nested).toStrictEqual(expected);
     });
+  });
+});
+
+describe('reducer -> Managers', () => {
+  it('should not use state manage as default', () => {
+    const reducerManager = new ReducerManagement();
+    expect(reducerManager.isStateManager).toBeFalsy();
+  });
+
+  it('should use state manage as default', () => {
+    const reducerManager = new ReducerStateManagement();
+    expect(reducerManager.isStateManager).toBeTruthy();
   });
 });

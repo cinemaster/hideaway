@@ -1,7 +1,7 @@
-import { getValue } from 'hideaway';
+import { getState } from 'hideaway';
 
 export const getListState = (state) => {
-  return getValue(state, {
+  return getState(state, {
     path: ['api'],
   });
 };
