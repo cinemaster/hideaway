@@ -20,12 +20,7 @@ export const getValue: TFGetValue = (state, options = {}) => {
     result = getNestedValue(result, nested, defaultValue);
   }
   if (isStateManager) {
-    const state = validateStateManager(result, nested);
-    return {
-      ...state,
-      value: state.value || defaultValue,
-      nested: state.nested || { keys: {}, path: [], allObject: false },
-    };
+    return validateStateManager(result, nested);
   }
   return result;
 };
